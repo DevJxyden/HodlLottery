@@ -1,0 +1,3178 @@
+
+<!DOCTYPE html>
+<HTML>
+<HEAD>
+<meta charset="utf-8">
+<link rel="icon" type="x-icon" href="/favicon.ico">
+<script type="text/javascript" src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+<script type="text/javascript" src="https://unpkg.com/@popperjs/core@2" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ho+j7jyWK8fNQe+A12Hb8AhRq26LrZ/JpcUGGOn+Y7RsweNrtN/tE3MoK7ZeZDyx" crossorigin="anonymous"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css" integrity="sha384-TX8t27EcRE3e/ihU7zmQxVncDAy5uIKz4rEkgIXeMed4M0jlfIDPvg6uqKI2xXr2" crossorigin="anonymous">
+<link rel="stylesheet" href="/styles.css">
+<style>
+@-webkit-keyframes y {
+    0% { -webkit-transform: rotateY(0deg); }
+    100% { -webkit-transform: rotateY(360deg); }
+}
+#y ~ img {
+    -webkit-animation: y 10s infinite linear;
+}
+</style>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/web3/1.3.4-rc.2/web3.min.js"></script>
+<script src="https://unpkg.com/@metamask/detect-provider/dist/detect-provider.js"></script>
+<SCRIPT>
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+var hpbPrice;
+
+async function startUpdateHPBPriceThread() {
+  // Sleep in loop
+  while(true) {
+
+	$.get( "https://api.bibox.com/v1/mdata?cmd=market&pair=HPB_USDT", function( data ) {
+        hpbPrice = data["result"]["last"]
+		document.getElementById("DIV_hpbPrice").innerHTML = 
+		"Current Price: $" + hpbPrice + "&nbsp;&nbsp;&nbsp;&nbsp; Percent Change: "  + data["result"]["percent"]  + "&nbsp;&nbsp;&nbsp;&nbsp;Daily Low: $" + data["result"]["low"] + "&nbsp;&nbsp;&nbsp;&nbsp;Daily High: $" + data["result"]["high"];
+	    
+	});
+  await sleep(60000);
+	
+  }
+}
+
+</SCRIPT>
+</HEAD>
+<BODY>
+<SCRIPT>startUpdateHPBPriceThread();</SCRIPT>
+<div id="DIV_hpbPrice" style="font-size:16px;height:25px;">
+</div>   
+
+<HR style = "border-top:1px solid black;">
+<DIV class="topnav">
+    
+    <DIV style="background-color:black;width:100%;text-align:center;display:block;color:white;font-weight:bold;">
+        <a href="/">Home</a>
+        <a href="/about">About</a>
+        <a class="active" href="/dapps">Dapps</a>
+        <a href="/dev">Development</a>
+   
+        <DIV style="display:block;float:right;background-color:white;">
+            <IMG src = "/images/logo.png" />
+        </DIV>
+    </DIV>
+</DIV>
+
+<DIV id= "gui_div" style="width:100%;border:1px solid silver;margin:0 auto;text-align:center;">
+    <DIV id = "user_buttons" style="width:100%;background-color:black;display:block;">
+
+    </DIV>
+</div>
+ 
+
+<div style = "background-image:url(/images/moon.jpg); position: relative; height:400px;">
+    <DIV id = "contract_notification" style="position: absolute;top: 0px;left: 0px; float:top;  background: rgba(0, 0, 0, 0.66); overflow-y: scroll;color:#cccccc;background-size: cover; float:right;font-size:18;font-family:arial;font-weight:bold;width:100%;height:400px">
+        <P>Welcome to The Hodl Lottery, powered by HPB. See <A style="color:white;" href = /dapps target = "_blank">dapps</A> for more details. Click <A style="color:white;" href = "./howtoplay.html" target = "_blank">Here</A> for game instructions. Enjoy! </P>
+    </DIV>
+</DIV>
+
+
+
+
+<DIV id = "DIV_gameList">
+    <h5>All Games</h5>
+    <TABLE style = "text-align:center;margin:0 auto;background-color:black;width:500px; color:white;">
+        <TR>
+            <TD>
+
+             <div class="btn-group dropup">
+              <button onclick="toggleCreateGameForm();" class="btn btn-secondary btn dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+               Create
+              </button>
+           
+                <div class="dropdown-menu" id="createGameFormID">
+                  <form class="px-4 py-3">
+                    <div class="form-group" style="width:400px;">
+                      <label for="gameName">Game Name</label>
+                      <input type="string" class="form-control" id="cgfGameName">
+                    </div> 
+                    <div class="form-group">
+                      <label for="hpbTicketCost">HPB cost per ticket</label>
+                      <input type="decimal" class="form-control" id="cgfCostPerTicket" value=0.05   maxlength=20>
+                    </div>
+                    <div class="form-group">
+                      <label for="hpbTicketsToBuy">Tickets to buy initially</label>
+                      <input type="number" class="form-control" id="cgfTicketsToBuy" value="1" min="1" max=8>
+                    </div>
+                    <div class="form-group">
+                      <label for="minPlayerCount">Minimum tickets sold to start game</label>
+                      <input type="number" class="form-control" id="cgfMinTicketCount" value="5" min="2" maxlength=5>
+                    </div>
+                    <div id = "DIV_advancedSettings" style="display:none;">
+                        <div class = "form-group">
+                            <label for="minPlayerCount">Block delay before game can start</label>
+                            <input type="number" class="form-control" id="cgfGameBlockDelay" value="5" min="0" maxlength=5>
+                            <label for="minPlayerCount">Block delay between each round</label>
+                            <input type="number" class="form-control" id="cgfGameRoundDelay" value="3" min="0" maxlength=5>
+                        </div>
+                    </div>
+
+
+                    <button class="btn btn-primary" onclick="createGameConfirm();" type="button">Continue</button>
+                    <button class="btn btn-primary" onclick="toggleCreateGameForm();" type="button" style="float:right;">Cancel</button>
+                    <button class="btn btn-secondary btn dropdown-toggle" type="button" onclick="toggleAdvancedSettings();"  aria-haspopup="true" aria-expanded="false" style="float:right;">Optional</button>
+                  </form>
+                
+          </div>
+          </DIV>
+            </TD>
+   
+
+        </TR>
+    </TABLE>
+</DIV>
+
+
+<!-- #####create game modal#### -->
+<div class="modal" id="createGameModal" tabindex="-1" role="dialog" aria-labelledby="createGameModalLabel" aria-hidden="true" >
+  <div class="modal-dialog-lg modal-dialog-scrollable" role="document">
+    <div class="modal-content" style="height:600px;white-space:pre;background-color:#15A7C5;">
+      <div class="modal-header"> 
+        <h3 class="modal-title" id="createGameModal" style="user-select: none;background-color:#15A7C5;color:black;font-weight:bold;">Confirm Cost to Create Game</h3>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Cancel">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body" id="confirmGameDetailDIV" style="background: linear-gradient(0deg, rgba(210,214,214,1) 0%, rgba(229,233,232,1) 80%);color:black;">
+      </div>
+      <div class="modal-footer" style="background: linear-gradient(0deg, rgba(210,214,214,1) 0%, rgba(229,233,232,1) 80%);">
+        <button type="button" onclick="createGame();" class="btn btn-secondary" data-dismiss="modal" id="createGameButton">Create Game</button>
+        <button type="button" onclick="toggleCreateGameForm();" class="btn btn-Modal titleprimary" data-dismiss="modal">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!--#########SEND HPB MODAL -->
+<div id="DIV_SendHPBModal" class="modal" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header"  style="background-color:#15A7C5;">
+        <h5 class="modal-title"><B>Send HPB To another user address</B></h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        Use this form to send HPB from your in-game account to another user.
+        <div class="form-group" style="width:400px;">
+          <HR>
+          <label for="hpbAddress"><b>HPB Receiving address</b></label>
+          <input type="string" class="form-control" id="hsfHPBAddress" placeholder = "0xa2eef85ee79a15e7d9aeae7a4289db9de6995bb8">
+        </div> 
+        <div class="form-group" style="width:400px;">
+          <label for="hpbAmount"><b>HPB Amount</b></label>
+          <input type="decimal" class="form-control" id="hsfHPBAmount" placeholder = "0.001">
+        </div> 
+      </div>
+      <div class="modal-footer">
+        <button onclick=confirmSendHPB(); type="button" class="btn btn-primary">Continue</button>
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="DIV_BuyTickets" class="modal" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header" style="background-color:#15A7C5;">
+        <h5 class="modal-title"><B>Buy tickets</B></h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        How many tickets would you like to buy for this game?<HR>
+        <div class="form-group" style="width:400px;">
+          <label for="ticketAmount"><b>Ticket Amount</b></label>
+          <SPAN id="btInputDIV"></SPAN>
+          Current Balance: <SPAN id="btCurrentBalance"></SPAN><BR>
+          Ticket Cost: <SPAN id="btTotalCost"></SPAN><BR>
+          New Balance: <SPAN id="btNewBalance"></SPAN>
+        </div> 
+      </div>
+      <div class="modal-footer">
+        <SPAN id = "btConfirmData"></SPAN>
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="DIV_infoModals">
+</div>
+
+
+
+<div style="linear-gradient(0deg, rgba(210,214,214,1) 0%, rgba(229,233,232,1) 80%);color:black;">
+<div id="DIV_gameCards" class="card-deck flex-row flex-nowrap overflow-auto" style="overflow-x:scroll;margin-left:0px;margin-right:0px;">
+
+</div>
+<DIV id="DIV_gameDisplay" class="card-deck flex-row flex-nowrap overflow-auto" style="overflow-x:scroll;margin-left:0px;margin-right:0px;">
+</DIV>
+</div>
+
+<DIV id="DIV_exchangeModals">
+<div class="modal" id="activeExchangeModal" tabindex="-1" role="dialog" aria-labelledby="activeExchangeModalLabel" aria-hidden="true" >
+  <DIV id="DIV_exchangeModal">
+  </div>
+</div>
+</DIV>
+
+ 
+
+<BR><BR><BR><BR><BR><BR><BR><BR><BR><BR><BR><BR> 
+
+
+<script>
+	var accounts = "";
+	var inGameBalance = "";
+    var bidList;
+	
+	var alltimeSpent = 0;
+	var alltimeGained = 0;
+	var gamesPlayed = 0;
+	
+    var wgTokenBalance=0;
+    var loadOnce = false;
+	
+
+	
+	var contract;
+	var walletBalance;
+	var ticketFee = ""
+	var web3;
+    var provider; 
+    var contractAddress = "0x0b5c5c66b5f10dcc426b294ce34e447df8e245db";
+    var blockBetweenRounds; 
+    var INVALID_VALUE = 44444444444
+    
+    var createGameButtonStatus = false;
+    var buyTicketButtonStatus = false;
+    var startGameButtonStatus = false;
+    var startRoundButtonStatus  = false;
+
+
+	var startBlock;
+
+	var ticketsOwned = 0;
+	var ticketsBought = 0;
+	
+	//might need to make separate mapping for this?
+	var gamesActiveCount = 0;
+	var gamesJoinedCount = 0;
+    var gamesPendingCount = 0;
+ 
+	var ipGames;
+	var maxBids;
+	var maxGames;
+ 
+	
+    var allGamesArray = []
+	
+	var ticketFeeMin;
+	var ticketFeeMax;
+	
+	var addressName; //holds either alias name or address if alias is not set
+		
+	var contractABIData = [
+	{
+		"constant": false,
+		"inputs": [
+			{
+				"name": "gameID",
+				"type": "uint256"
+			},
+			{
+				"name": "ticketCount",
+				"type": "uint256"
+			}
+		],
+		"name": "buyTickets",
+		"outputs": [],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"constant": false,
+		"inputs": [
+			{
+				"name": "_entryFee",
+				"type": "uint256"
+			},
+			{
+				"name": "minimumTicketCount",
+				"type": "uint256"
+			},
+			{
+				"name": "ticketsToBuy",
+				"type": "uint256"
+			},
+			{
+				"name": "gameName",
+				"type": "bytes32"
+			},
+			{
+				"name": "gameDelay",
+				"type": "uint256"
+			},
+			{
+				"name": "roundDelay",
+				"type": "uint256"
+			}
+		],
+		"name": "createGame",
+		"outputs": [
+			{
+				"name": "",
+				"type": "bool"
+			}
+		],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"constant": false,
+		"inputs": [],
+		"name": "deposit",
+		"outputs": [],
+		"payable": true,
+		"stateMutability": "payable",
+		"type": "function"
+	},
+	{
+		"constant": false,
+		"inputs": [],
+		"name": "destroy",
+		"outputs": [],
+		"payable": true,
+		"stateMutability": "payable",
+		"type": "function"
+	},
+	{
+		"constant": false,
+		"inputs": [
+			{
+				"name": "gameID",
+				"type": "uint256"
+			}
+		],
+		"name": "endGame",
+		"outputs": [],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"constant": false,
+		"inputs": [
+			{
+				"name": "gameID",
+				"type": "uint256"
+			}
+		],
+		"name": "leaveGame",
+		"outputs": [],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"constant": false,
+		"inputs": [
+			{
+				"name": "gameID",
+				"type": "uint256"
+			},
+			{
+				"name": "bidAmount",
+				"type": "uint256"
+			}
+		],
+		"name": "placeBid",
+		"outputs": [
+			{
+				"name": "",
+				"type": "bool"
+			}
+		],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"constant": false,
+		"inputs": [
+			{
+				"name": "gameID",
+				"type": "uint256"
+			},
+			{
+				"name": "startingBid",
+				"type": "uint256"
+			}
+		],
+		"name": "sellTicketBid",
+		"outputs": [],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"constant": false,
+		"inputs": [
+			{
+				"name": "addr",
+				"type": "address"
+			},
+			{
+				"name": "amount",
+				"type": "uint256"
+			}
+		],
+		"name": "sendHPBToPlayer",
+		"outputs": [],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"constant": false,
+		"inputs": [
+			{
+				"name": "newAlias",
+				"type": "bytes20"
+			}
+		],
+		"name": "setAlias",
+		"outputs": [],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"constant": false,
+		"inputs": [
+			{
+				"name": "freezeState",
+				"type": "bool"
+			}
+		],
+		"name": "setContractFreeze",
+		"outputs": [],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"constant": false,
+		"inputs": [
+			{
+				"name": "maximumBids",
+				"type": "uint32"
+			}
+		],
+		"name": "setMaximumBid",
+		"outputs": [],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"constant": false,
+		"inputs": [
+			{
+				"name": "maximumGames",
+				"type": "uint32"
+			}
+		],
+		"name": "setMaximumGames",
+		"outputs": [],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"constant": false,
+		"inputs": [
+			{
+				"name": "maxTickets",
+				"type": "uint256"
+			}
+		],
+		"name": "setMaxTickets",
+		"outputs": [],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"constant": false,
+		"inputs": [
+			{
+				"name": "newOwner",
+				"type": "address"
+			}
+		],
+		"name": "setOwner",
+		"outputs": [],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"constant": false,
+		"inputs": [
+			{
+				"name": "hpbFeeMin",
+				"type": "uint256"
+			},
+			{
+				"name": "hpbFeeMax",
+				"type": "uint256"
+			}
+		],
+		"name": "setTicketFeeRange",
+		"outputs": [],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"constant": false,
+		"inputs": [
+			{
+				"name": "gameID",
+				"type": "uint256"
+			}
+		],
+		"name": "startGame",
+		"outputs": [],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"constant": false,
+		"inputs": [
+			{
+				"name": "gameID",
+				"type": "uint256"
+			}
+		],
+		"name": "startNextRound",
+		"outputs": [],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"constant": false,
+		"inputs": [
+			{
+				"name": "quantity",
+				"type": "uint256"
+			}
+		],
+		"name": "withdraw",
+		"outputs": [
+			{
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"payable": true,
+		"stateMutability": "payable",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "constructor"
+	},
+	{
+		"payable": true,
+		"stateMutability": "payable",
+		"type": "fallback"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": false,
+				"name": "gameID",
+				"type": "uint256"
+			},
+			{
+				"indexed": false,
+				"name": "gameName",
+				"type": "bytes32"
+			},
+			{
+				"indexed": false,
+				"name": "sender",
+				"type": "bytes20"
+			},
+			{
+				"indexed": false,
+				"name": "ticketCount",
+				"type": "uint256"
+			},
+			{
+				"indexed": false,
+				"name": "totalTickets",
+				"type": "uint256"
+			}
+		],
+		"name": "BuyTickets",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": false,
+				"name": "gameID",
+				"type": "uint256"
+			},
+			{
+				"indexed": false,
+				"name": "gameName",
+				"type": "bytes32"
+			},
+			{
+				"indexed": false,
+				"name": "sender",
+				"type": "bytes20"
+			},
+			{
+				"indexed": false,
+				"name": "winnerAddress",
+				"type": "bytes20"
+			},
+			{
+				"indexed": false,
+				"name": "hpbWinnerPool",
+				"type": "uint256"
+			}
+		],
+		"name": "EndGame",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": false,
+				"name": "gameID",
+				"type": "uint256"
+			},
+			{
+				"indexed": false,
+				"name": "gameName",
+				"type": "bytes32"
+			},
+			{
+				"indexed": false,
+				"name": "ticketsRemaining",
+				"type": "uint256"
+			},
+			{
+				"indexed": false,
+				"name": "sender",
+				"type": "bytes20"
+			}
+		],
+		"name": "LeaveGame",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": false,
+				"name": "gameID",
+				"type": "uint256"
+			},
+			{
+				"indexed": false,
+				"name": "sender",
+				"type": "bytes20"
+			},
+			{
+				"indexed": false,
+				"name": "gameName",
+				"type": "bytes32"
+			},
+			{
+				"indexed": false,
+				"name": "oldOwner",
+				"type": "bytes20"
+			},
+			{
+				"indexed": false,
+				"name": "newOwner",
+				"type": "bytes20"
+			},
+			{
+				"indexed": false,
+				"name": "bidAmount",
+				"type": "uint256"
+			},
+			{
+				"indexed": false,
+				"name": "newBlockReadyIndex",
+				"type": "uint256"
+			}
+		],
+		"name": "PlaceBid",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": false,
+				"name": "gameID",
+				"type": "uint256"
+			},
+			{
+				"indexed": false,
+				"name": "gameName",
+				"type": "bytes32"
+			},
+			{
+				"indexed": false,
+				"name": "sender",
+				"type": "bytes20"
+			},
+			{
+				"indexed": false,
+				"name": "startingBid",
+				"type": "uint256"
+			}
+		],
+		"name": "SellTicketBid",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": false,
+				"name": "gameID",
+				"type": "uint256"
+			},
+			{
+				"indexed": false,
+				"name": "gameName",
+				"type": "bytes32"
+			},
+			{
+				"indexed": false,
+				"name": "sender",
+				"type": "bytes20"
+			},
+			{
+				"indexed": false,
+				"name": "playersAtStart",
+				"type": "uint256"
+			},
+			{
+				"indexed": false,
+				"name": "winnerPool",
+				"type": "uint256"
+			}
+		],
+		"name": "StartGame",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": false,
+				"name": "gameID",
+				"type": "uint256"
+			},
+			{
+				"indexed": false,
+				"name": "gameName",
+				"type": "bytes32"
+			},
+			{
+				"indexed": false,
+				"name": "sender",
+				"type": "bytes20"
+			},
+			{
+				"indexed": false,
+				"name": "eliminated",
+				"type": "bytes20[8]"
+			},
+			{
+				"indexed": false,
+				"name": "remaining",
+				"type": "uint256"
+			},
+			{
+				"indexed": false,
+				"name": "actionReady",
+				"type": "uint256"
+			}
+		],
+		"name": "EliminatePlayers",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": false,
+				"name": "winnerAddress",
+				"type": "bytes20"
+			},
+			{
+				"indexed": false,
+				"name": "gameID",
+				"type": "uint256"
+			},
+			{
+				"indexed": false,
+				"name": "gameName",
+				"type": "bytes32"
+			},
+			{
+				"indexed": false,
+				"name": "winnerPool",
+				"type": "uint256"
+			}
+		],
+		"name": "AnnounceWinner",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": false,
+				"name": "sender",
+				"type": "bytes20"
+			},
+			{
+				"indexed": false,
+				"name": "value",
+				"type": "uint256"
+			}
+		],
+		"name": "Deposit",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": false,
+				"name": "sender",
+				"type": "bytes20"
+			},
+			{
+				"indexed": false,
+				"name": "gameID",
+				"type": "uint256"
+			},
+			{
+				"indexed": false,
+				"name": "gameName",
+				"type": "bytes32"
+			}
+		],
+		"name": "CreateNewGame",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": false,
+				"name": "sender",
+				"type": "bytes20"
+			},
+			{
+				"indexed": false,
+				"name": "value",
+				"type": "uint256"
+			}
+		],
+		"name": "Withdraw",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": false,
+				"name": "sender",
+				"type": "bytes20"
+			},
+			{
+				"indexed": false,
+				"name": "aliasName",
+				"type": "bytes20"
+			}
+		],
+		"name": "SetAlias",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": false,
+				"name": "sender",
+				"type": "bytes20"
+			},
+			{
+				"indexed": false,
+				"name": "receiver",
+				"type": "bytes20"
+			},
+			{
+				"indexed": false,
+				"name": "amount",
+				"type": "uint256"
+			}
+		],
+		"name": "SendHPBToPlayer",
+		"type": "event"
+	},
+	{
+		"constant": true,
+		"inputs": [
+			{
+				"name": "addr",
+				"type": "address"
+			}
+		],
+		"name": "getAliasIfSet",
+		"outputs": [
+			{
+				"name": "",
+				"type": "bytes20"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [
+			{
+				"name": "gameID",
+				"type": "uint256"
+			}
+		],
+		"name": "getBidCount",
+		"outputs": [
+			{
+				"name": "bidCount",
+				"type": "uint256"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [
+			{
+				"name": "gameID",
+				"type": "uint256"
+			},
+			{
+				"name": "bidIndex",
+				"type": "uint256"
+			}
+		],
+		"name": "getBids",
+		"outputs": [
+			{
+				"name": "ownedaddress",
+				"type": "bytes20"
+			},
+			{
+				"name": "highestBid",
+				"type": "uint256"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [
+			{
+				"name": "gameID",
+				"type": "uint256"
+			}
+		],
+		"name": "getBlocksBeforeGameCanStart",
+		"outputs": [
+			{
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [
+			{
+				"name": "gameID",
+				"type": "uint256"
+			}
+		],
+		"name": "getGameByID",
+		"outputs": [
+			{
+				"components": [
+					{
+						"name": "gameID",
+						"type": "uint256"
+					},
+					{
+						"name": "currentRoundNumber",
+						"type": "uint256"
+					},
+					{
+						"name": "name",
+						"type": "bytes32"
+					},
+					{
+						"name": "ticketFee",
+						"type": "uint256"
+					},
+					{
+						"name": "lastEliminated",
+						"type": "bytes20[8]"
+					},
+					{
+						"name": "minimumTicketCount",
+						"type": "uint256"
+					},
+					{
+						"name": "isGameActive",
+						"type": "bool"
+					},
+					{
+						"name": "isGamePending",
+						"type": "bool"
+					},
+					{
+						"name": "isGameComplete",
+						"type": "bool"
+					},
+					{
+						"name": "isEndGameReady",
+						"type": "bool"
+					},
+					{
+						"name": "exists",
+						"type": "bool"
+					},
+					{
+						"name": "hpbWinnerPool",
+						"type": "uint256"
+					},
+					{
+						"name": "entryCount",
+						"type": "uint256"
+					},
+					{
+						"name": "vip",
+						"type": "address"
+					},
+					{
+						"name": "ticketCountAtStart",
+						"type": "uint256"
+					},
+					{
+						"name": "blockCountActionReadyIndex",
+						"type": "uint256"
+					},
+					{
+						"name": "blockGameDelay",
+						"type": "uint256"
+					},
+					{
+						"name": "blockRoundDelay",
+						"type": "uint256"
+					},
+					{
+						"name": "tickets",
+						"type": "address[]"
+					}
+				],
+				"name": "",
+				"type": "tuple"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [],
+		"name": "getGameCount",
+		"outputs": [
+			{
+				"name": "gameCount",
+				"type": "uint256"
+			},
+			{
+				"name": "activeGames",
+				"type": "uint256"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [
+			{
+				"name": "gameID",
+				"type": "uint256"
+			}
+		],
+		"name": "getLastEliminated",
+		"outputs": [
+			{
+				"name": "",
+				"type": "bytes20[8]"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [],
+		"name": "getLastWinnerAddress",
+		"outputs": [
+			{
+				"name": "addressLastWinner",
+				"type": "address"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [],
+		"name": "getLastWinnerAmount",
+		"outputs": [
+			{
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [],
+		"name": "getMaximumBids",
+		"outputs": [
+			{
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [],
+		"name": "getMaximumGames",
+		"outputs": [
+			{
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [
+			{
+				"name": "gameID",
+				"type": "uint256"
+			}
+		],
+		"name": "getNumOfPlayersToEliminate",
+		"outputs": [
+			{
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [],
+		"name": "getPlayerCountAlltime",
+		"outputs": [
+			{
+				"name": "playerCount",
+				"type": "uint256"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [
+			{
+				"name": "gameID",
+				"type": "uint256"
+			}
+		],
+		"name": "getPlayerGameInfo",
+		"outputs": [
+			{
+				"name": "ticketsOwned",
+				"type": "uint256"
+			},
+			{
+				"name": "ticketsForSale",
+				"type": "uint256"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [
+			{
+				"name": "addr",
+				"type": "address"
+			}
+		],
+		"name": "getPlayerInfo",
+		"outputs": [
+			{
+				"name": "balance",
+				"type": "uint256"
+			},
+			{
+				"name": "lifetimeHPBSpent",
+				"type": "uint256"
+			},
+			{
+				"name": "lifetimeHPBGained",
+				"type": "uint256"
+			},
+			{
+				"name": "lifetimeGamesPlayed",
+				"type": "uint256"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [
+			{
+				"name": "gameID",
+				"type": "uint256"
+			}
+		],
+		"name": "getTicketCount",
+		"outputs": [
+			{
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [],
+		"name": "getTicketFeeWEIRange",
+		"outputs": [
+			{
+				"name": "minWEI",
+				"type": "uint256"
+			},
+			{
+				"name": "maxWEI",
+				"type": "uint256"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [],
+		"name": "getWGTokenBalance",
+		"outputs": [
+			{
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [
+			{
+				"name": "gameID",
+				"type": "uint256"
+			}
+		],
+		"name": "getWinnerPoolWEI",
+		"outputs": [
+			{
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [
+			{
+				"name": "gameID",
+				"type": "uint256"
+			}
+		],
+		"name": "ticketsOwnedInGame",
+		"outputs": [
+			{
+				"name": "entryCount",
+				"type": "uint256"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	}
+]
+
+function getTicketFeeRange(){
+    
+	var sendInfo = {from:accounts[0]};
+
+    contract.methods.getTicketFeeWEIRange().call(sendInfo, function(err,result){
+		ticketFeeMin = result[0];
+		ticketFeeMax = result[1];
+	});//document.getElementById("createGameFormID").classList.toggle("show");
+    
+}
+
+  
+
+    
+async function getBids(gameID){
+    bidList = [];
+	var sendInfo = {from:accounts[0]};
+    gameID = findGameIndex(gameID)
+	var i = 0;
+	var done = false;
+    await contract.methods.getBidCount(gameID).call(sendInfo, async function(err,result){
+
+        var bidCount = result;
+
+        if(bidCount == 0){
+            done = true;
+            return;
+        }
+        while(i < bidCount){
+
+	        await contract.methods.getBids(gameID,i).call(sendInfo, function(err,result2){
+	            bidList[i] = result2;
+	            i ++;
+	            if(i >= bidCount)
+	                done = true;
+	        });
+        }
+	});
+
+    while(!done){
+
+        await sleep(300);
+    }
+
+}
+    
+    async function getMaxBids(){
+        
+    	var sendInfo = {from:accounts[0]};
+    
+        await contract.methods.getMaximumBids().call(sendInfo, function(err,result){
+    		maxBids = parseInt(result);
+
+    	});//document.getElementById("createGameFormID").classList.toggle("show");
+        
+    }
+
+
+    function writeNotification(string){
+        document.getElementById("contract_notification").innerHTML += string;
+        document.getElementById("contract_notification").scrollTop = document.getElementById("contract_notification").scrollHeight + 50;
+    }
+    
+    
+    function parseAddress(address) {
+        if(web3.utils.toAscii(address).search('\0') == -1){
+            return address;
+        }
+        else{
+            return  web3.utils.toAscii(address);
+        }
+    }
+
+    async function web3Enable(){
+        
+      var options = {"mustBeMetaMask":false,"timeout":5000,"mustBeMetaMask":false}
+      console.log(options.timeout)
+      provider = await detectEthereumProvider(options);
+  
+       // writeNotification(provider)
+ 
+        if (provider) {
+ 
+          //  ethereum.request()
+            ethereum.autoRefreshOnNetworkChange = false;
+            web3 = new Web3(provider);
+            return true;
+        }
+        else{
+        return false;
+        }
+    }
+    
+    function addressCompare(string1, string2)
+    {
+        string1 = string1.replace(/\0/g,'')
+        string2 = string2.replace(/\0/g,'')
+        if(string1.length != string2.length){
+            return false;
+        }
+        string1 = string1.toLowerCase();
+        string2 = string2.toLowerCase();
+        for(var i = 0; i != string1.length; i++){
+            if(string1[i] != string2[i]){
+                return false;
+            }
+        }
+        return true;
+    }
+
+    async function loadEventListener(){
+        await sleep(1000)
+                        
+		web3.eth.getBlockNumber().then(function(blockNumber){
+		    
+			startBlock = blockNumber;
+            
+			contract.events.allEvents({
+			fromBlock: startBlock - 100
+			}, async function(error, eventData){
+			    
+			    var eventName = eventData["event"];
+			    //filter action on event name
+                
+			    if(eventName == "Deposit"){
+				    var sender = parseAddress(eventData["returnValues"]["sender"]);
+				    var value = web3.utils.fromWei(eventData["returnValues"]["value"]);
+                    writeNotification("<div>*" + sender + " deposited " + value + " HPB.</div>");
+				    if(eventData.blockNumber > startBlock){
+				        if(addressCompare(sender,addressName)){
+    				        updateInGameBalance();
+    				        updateWalletBalance();
+				        }
+				    }
+			    }
+			    else if(eventName == "SendHPBToPlayer"){
+				    var sender = parseAddress(eventData["returnValues"]["sender"]);
+				    var receiver = parseAddress(eventData["returnValues"]["receiver"]);
+				    var hpbAmount = web3.utils.fromWei(eventData["returnValues"]["amount"]);
+                    writeNotification("<div>*" + sender + " sent " + hpbAmount + " HPB to " + receiver  + ".</div>");
+    			    if(eventData.blockNumber > startBlock){
+
+				        if(addressCompare(receiver,addressName) || addressCompare(sender,addressName)){
+    				        updateInGameBalance();
+    				        updateWalletBalance();
+				        }
+				    }
+			    }
+			    else if(eventName == "Withdraw"){
+				    var sender = parseAddress(eventData["returnValues"]["sender"]);
+				    var value = web3.utils.fromWei(eventData["returnValues"]["value"]);
+				    writeNotification("<div>*" + sender + " withdrew " + value + " HPB.</div>");
+				    if(addressCompare(sender,addressName) && eventData.blockNumber > startBlock){
+				        updateInGameBalance();
+				        updateWalletBalance();
+				    }
+                }
+                else if(eventName == "CreateNewGame"){
+                    var sender = parseAddress(eventData["returnValues"]["sender"]);
+                    var gameID = eventData["returnValues"]["gameID"];
+                    var gameName = web3.utils.toAscii(eventData["returnValues"]["gameName"]);
+                    //showGameAtIndex(gameID);
+
+
+				    writeNotification("<div>*" + sender + " created a new game named " + gameName + " with ID: " + gameID +  ".</div>");
+				    if(eventData.blockNumber  > startBlock){
+
+    				    if(addressCompare(sender,addressName) ){
+    				        updateInGameBalance();
+    				        updateWalletBalance();
+    				    }
+				        
+				    }
+                }
+                else if(eventName == "SetAlias"){
+				    var sender = parseAddress(eventData["returnValues"]["sender"]);
+				    var aliasName = parseAddress(eventData["returnValues"]["aliasName"]);
+				    writeNotification("<div>*" + sender + " is now known as: " + aliasName + ".</div>");
+				    
+				    if(eventData.blockNumber > startBlock){
+				        if(addressCompare(sender, addressName) ){
+    				        updateInGameBalance();
+    				        updateWalletBalance();
+				        }
+				    }
+                }
+                else if(eventName == "BuyTickets"){
+				    var sender = parseAddress(eventData["returnValues"]["sender"]);
+				    var gameID = eventData["returnValues"]["gameID"];
+				    
+				    var gameName = web3.utils.toAscii(eventData["returnValues"]["gameName"])
+				    var ticketCount = eventData["returnValues"]["ticketCount"];
+				    writeNotification("<div>*" + sender + " bought " + ticketCount + " ticket(s) for game " + gameName + " with ID: " + gameID + ".</div>");
+				    if(eventData.blockNumber > startBlock){
+				        if(addressCompare(sender,addressName)){
+    				        updateInGameBalance();
+    				        updateInGameBalance();
+				        }
+                        await sleep(500)
+				        var arrayGameID = findGameIndex(gameID); //buy tickets gets called before create game finishes leading to div issue
+				        console.log("ARRAYGAMEID1=" + arrayGameID)
+				        if(arrayGameID == -1){ //just created new game
+    				        await loadGameInfoByID(gameID)
+    				        gameArrayID = findGameIndex(gameID);
+    				        console.log("ARRAYGAMEID2=" + arrayGameID)
+                            showGameAtIndex(gameArrayID); 
+                    //        setGameCardStyle(gameID); //setGameCardStyle(gameID);
+				        }
+				        else{
+    				        allGamesArray[arrayGameID]["entryCount"] = parseInt(allGamesArray[arrayGameID]["entryCount"]) + parseInt(ticketCount);
+    				        allGamesArray[arrayGameID]["hpbWinnerPool"] = (parseFloat(allGamesArray[arrayGameID]["hpbWinnerPool"]) + (parseInt(ticketCount) * parseFloat(allGamesArray[arrayGameID]["ticketFee"]) *0.98)).toFixed(12)*1;
+    				        document.getElementById("currentPrize" + gameID).innerHTML = allGamesArray[arrayGameID]["hpbWinnerPool"];
+    				        document.getElementById("gameTickets" + gameID).innerHTML = allGamesArray[arrayGameID]["entryCount"];
+    				        showGameInfo(gameID, true);
+				        }
+				        //document.getElementById("DIV_sgTicketsOwned" + gameID).innerHTML = 
+				    }
+                } 
+                else if(eventName == "EndGame"){
+                    var sender = parseAddress(eventData["returnValues"]["sender"]);
+                    var gameID = eventData["returnValues"]["gameID"];
+                    var winnerAddress = parseAddress(eventData["returnValues"]["winnerAddress"]);
+                    var hpbWinnerPool = web3.utils.fromWei(eventData["returnValues"]["hpbWinnerPool"]);
+                    var gameName = web3.utils.toAscii(eventData["returnValues"]["gameName"])
+                    writeNotification("<div>*" + sender + " called FinishGame, " + winnerAddress + " was the winner for game " + gameName + " with ID: " + gameID + " and received " + hpbWinnerPool + " HPB.</div>");
+                    if(eventData.blockNumber > startBlock){
+    				    if(addressCompare(sender,addressName)){
+    				        updateInGameBalance();
+    				        updateWalletBalance();
+    				    }
+                        removeGameCard(gameID);
+                    }
+                }
+                else if(eventName == "LeaveGame"){
+                    var sender = parseAddress(eventData["returnValues"]["sender"]);
+                    var gameID = eventData["returnValues"]["gameID"];
+                    var gameName = web3.utils.toAscii(eventData["returnValues"]["gameName"]);
+                    var ticketsRemaining = eventData["returnValues"]["ticketsRemaining"];
+                    var arrayGameID = findGameIndex(gameID);
+                    writeNotification("<div>*" + sender + " has left game " + gameName + " with ID: " + gameID + ".</div>");
+                    
+                    if(eventData.blockNumber > startBlock)
+                    {
+                        console.log("agid=" + arrayGameID)
+                        allGamesArray[arrayGameID]["hpbWinnerPool"] = (parseFloat(parseInt(ticketsRemaining) * parseFloat(allGamesArray[arrayGameID]["ticketFee"]) *0.98)).toFixed(12)*1;
+                        allGamesArray[arrayGameID]["entryCount"] = ticketsRemaining;
+                        if(ticketsRemaining != 0){
+                            document.getElementById("gamePrize" + gameID).innerHTML = allGamesArray[arrayGameID]["hpbWinnerPool"];
+    				        document.getElementById("gameTickets" + gameID).innerHTML = allGamesArray[arrayGameID]["entryCount"];
+    				        
+    				        var chancesDeno = Math.max(allGamesArray[arrayGameID]["minimumTicketCount"], allGamesArray[arrayGameID]["entryCount"])
+                            var winningAmount = Math.max(allGamesArray[arrayGameID]["minimumTicketCount"] * allGamesArray[arrayGameID]["ticketFee"] * 0.98, 
+                                                    allGamesArray[arrayGameID]["hpbWinnerPool"]);
+                        //    document.getElementById("DIV_sgTicketsOwned" + gameID) =
+                        //if document.getElementById("DIV_hpbGameID" + gameID) != NULL
+
+                            document.getElementById("DIV_sgTicketStatus" + gameID).innerHTML =  allGamesArray[arrayGameID]["entryCount"] + " / " +  allGamesArray[arrayGameID]["minimumTicketCount"]
+                            document.getElementById("DIV_sgChancesWinning" + gameID).innerHTML = ((100*ticketsOwned) / chancesDeno).toFixed(2) + "% " + "chance to win " + winningAmount + " HPB"
+                            document.getElementById("BUTTON_hpbGameID" + gameID).innerHTML = "Show";
+    				     //   document.getElementById("DIV_hpbGameID" + gameID).collapse('hide');
+    				     //need to update card color on leave game
+    				        
+                        }
+    				    if(addressCompare(sender,addressName)){
+    				        updateInGameBalance();
+    				        updateWalletBalance();
+    				    }
+
+    				    if(ticketsRemaining == 0){
+    				        writeNotification("<div>*The Game " + gameName + " with ID: " + gameID + " was automatically cancelled because no tickets remain.</div>");
+    				        removeGameCard(gameID);
+    				    }
+                    }
+                }
+                else if(eventName == "PlaceBid"){
+                    
+                    var sender = parseAddress(eventData["returnValues"]["sender"]);
+                    var newOwner = parseAddress(eventData["returnValues"]["newOwner"]);
+                    var oldOwner = parseAddress(eventData["returnValues"]["oldOwner"]);
+                    var gameID = eventData["returnValues"]["gameID"];
+                    var gameName = web3.utils.toAscii(eventData["returnValues"]["gameName"]);
+                    var bidAmount = web3.utils.fromWei(eventData["returnValues"]["bidAmount"])
+                    var newBlockReadyIndex = eventData["returnValues"]["newBlockReadyIndex"];
+			        if(oldOwner == newOwner){
+                        writeNotification("<div>*" + sender + " bid " + bidAmount + " for one of " + oldOwner + "'s" + " tickets in game "  + gameName + " with ID: " + gameID + " but the amount was  not more than the current highest bid. </div>");
+			        }
+                    else{
+                        writeNotification("<div>*" + sender + " placed the highest bid of " + bidAmount + " for one of " + oldOwner + "'s" + " tickets in game " + gameName + " with ID: " + gameID + " and is now its owner until a higher bid is received. </div>");
+                    }
+                    if(eventData.blockNumber > startBlock){
+                        if(oldOwner != newOwner){
+                            allGamesArray[findGameIndex(gameID)]["blockCountActionReadyIndex"] = newBlockReadyIndex;
+                            changeActionMenuState(gameID, "StartRound", true);
+                            waitForActionBlockThread(gameID);
+                        }
+    				    if(addressCompare(sender,addressName) || addressCompare(oldOwner,addressName)){
+    				        updateInGameBalance();
+    				        updateWalletBalance();
+    				        showGameInfo(gameID, true);
+    				    }
+    				    viewExchange(gameID, false);
+				    }
+                }
+                else if(eventName == "SellTicketBid"){
+                    var sender = parseAddress(eventData["returnValues"]["sender"]);
+                    var gameID = eventData["returnValues"]["gameID"];
+                    var startingBid = web3.utils.fromWei(eventData["returnValues"]["startingBid"]);
+                    var gameName = web3.utils.toAscii(eventData["returnValues"]["gameName"]);
+                    writeNotification("<div>*" + sender + " has placed a ticket for sale for game " + gameName + " with ID: " + gameID + " for " + startingBid + "HPB.</div>");
+
+				    if(eventData.blockNumber > startBlock){
+    				    if(addressCompare(sender,addressName)){
+    				        updateInGameBalance();
+    				        updateWalletBalance();
+    				    }
+    				    viewExchange(gameID, false)
+				    }
+                }
+                else if(eventName == "StartGame"){
+                    var sender = parseAddress(eventData["returnValues"]["sender"]);
+                    var gameID = eventData["returnValues"]["gameID"];
+                    var playersAtStart = eventData["returnValues"]["playersAtStart"];
+                    var winnerPool = web3.utils.fromWei(eventData["returnValues"]["winnerPool"]);
+                    var gameName = web3.utils.toAscii(eventData["returnValues"]["gameName"]);
+                    writeNotification("<div>*" + sender + " has started game " + gameName + " with ID: " + gameID + " with " + playersAtStart + " tickets and a winner pool of " + winnerPool + "HPB.</div>");
+				    if(addressCompare(sender,addressName) && eventData.blockNumber > startBlock){
+
+				        updateInGameBalance();
+				        updateWalletBalance();
+				        
+				    }
+				    
+                }
+                else if(eventName == "EliminatePlayers"){
+                    var sender = parseAddress(eventData["returnValues"]["sender"]);
+                    var gameID = eventData["returnValues"]["gameID"];
+                    var eliminated = eventData["returnValues"]["eliminated"];
+                    eliminated = [...eliminated];
+                    var remaining = eventData["returnValues"]["remaining"];
+                    var gameName = web3.utils.toAscii(eventData["returnValues"]["gameName"]);
+                    var arrayGameID = findGameIndex(gameID);   
+                    for(var i = 0; i < eliminated.length; i++){
+                        if(eliminated[i] == INVALID_VALUE || value == 0){
+                            eliminated.splice(i, 1)
+                            i --
+                        }
+                        else{
+                            eliminated[i] = parseAddress(eliminated[i])
+                        }
+                    }
+                    
+                    writeNotification("<div>*" + "the start of the new round has eliminated one ticket from each of the following players for game " + gameName + " with ID: " + gameID + " owned by: [" + eliminated + "] and there are " + remaining + " tickets remaining.</div>");
+
+                    if(eventData.blockNumber > startBlock){
+                        allGamesArray[arrayGameID]["entryCount"] = remaining;
+                        allGamesArray[arrayGameID]["currentRoundNumber"] =  parseInt(allGamesArray[arrayGameID]["currentRoundNumber"]) + 1;
+                        allGamesArray[arrayGameID]["blockCountActionReadyIndex"] = eventData["returnValues"]["actionReady"];
+                        allGamesArray[arrayGameID]["lastEliminated"] = eventData["returnValues"]["eliminated"];
+                        
+                        
+                        document.getElementById("gameRound" + gameID).innerHTML = allGamesArray[arrayGameID]["currentRoundNumber"];
+    			        document.getElementById("gameTickets" + gameID).innerHTML = allGamesArray[arrayGameID]["entryCount"];
+    			     //   setGameCardStyle(gameID)
+    			        
+                        if(remaining != 1){ //if more than 1 player remaining, restart block thread
+                            //waitForActionBlockThread(gameID);
+                            showGameInfo(gameID, true)
+                            setGameCardStyle(gameID);
+                            
+                        }
+                        else{
+                            allGamesArray[arrayGameID]["blockCountActionReadyIndex"] = 0;
+                            showGameInfo(gameID, true)
+                            setGameCardStyle(gameID);
+                        }
+                    }
+                }
+                else if(eventName == "AnnounceWinner"){
+                    var gameID = eventData["returnValues"]["gameID"];
+                    var gameName = eventData["returnValues"]["gameName"];
+                    var winnerPool = web3.utils.fromWei(eventData["returnValues"]["winnerPool"]);
+                    var winnerAddress = parseAddress(eventData["returnValues"]["winnerAddress"]);
+                    var gameName = web3.utils.toAscii(eventData["returnValues"]["gameName"]);
+                    writeNotification("<div>*" + winnerAddress + " has won the lottery " + gameName + " with ID: " + gameID + " for a prize of " + winnerPool + "HPB! Use the finish game menu action to collect reward.</div>");
+                    
+                    if(eventData.blockNumber > startBlock){
+                        allGamesArray[findGameIndex(gameID)]["isEndGameReady"] = true;
+                        console.log("GAMEID=" + gameID)
+                        showGameInfo(gameID, true)
+                         setGameCardStyle(gameID)
+                       // console.log("ARRAYGAMEID=" + arrayGameID)
+                        if(addressCompare(winnerAddress, addressName)){
+				            updateInGameBalance();
+				        }
+                    }
+                }
+			});
+		});
+    }
+    
+
+     web3Enable().then(function(result){
+		 if(result){
+			launchDapp();
+			}
+			else{
+				writeNotification("<p class=\"alert\">Web3 capibility not loaded, is Metamask installed? If using Metamask mobile, please refresh page.</p><BR>");
+			}
+		});
+  
+ 
+function confirmSendHPB(){
+    var hpbAddress = document.getElementById("hsfHPBAddress").value;
+    var hpbAmount =  document.getElementById("hsfHPBAmount").value;
+
+    var convertedBalance = web3.utils.toWei(inGameBalance)
+    var convertedHpbAmount = web3.utils.toWei(hpbAmount)
+
+    if(parseInt(convertedHpbAmount) > parseInt(convertedBalance)){
+        alert("Not enough in the game wallet to send " + hpbAmount + " HPB.")
+        return;
+    }   
+    if(web3.utils.isAddress(hpbAddress) == false){
+        alert(hpbAddress + " is not a valid HPB address.");
+        return;   
+    }
+    else{
+        if(window.confirm("Sending HPB cannot be undone. Continue to send " + hpbAmount + "HPB?")){
+            $("#DIV_SendHPBModal").modal('toggle');
+            //do transaction
+        	contract.methods.sendHPBToPlayer(hpbAddress,convertedHpbAmount).estimateGas({from:accounts[0]}).then(function(gasLimit){
+    	        gasLimit = (gasLimit * 1.1).toFixed(0);
+    	        if(gasLimit < minGas)
+    	            gasLimit = minGas;
+                var sendInfo = {from:accounts[0], gasPrice:'18000000000'};
+        	    contract.methods.sendHPBToPlayer(hpbAddress,convertedHpbAmount).send(sendInfo)
+            	    .on("transactionHash",function(trxHash){
+                			writeNotification("[Send HPB] transaction recorded: " + "<A style=\"color:white;\" href=https://hpbscan.org/tx/" + trxHash + " target = \"_blank\">" + trxHash + "</A><BR>" + "Awaiting network confirmation...<BR>");
+                })
+            })
+
+        }
+    }
+}
+
+function launchDapp()
+{
+	//replaces etherium.enable
+	ethereum.request({ method: 'eth_requestAccounts' }).then(function(){
+    	contract = new web3.eth.Contract(contractABIData, contractAddress);
+        loadProviderAccountInfo();
+        getTicketFeeRange();
+	});
+}
+
+var initLoad = true;
+function loadProviderAccountInfo(){
+	web3.eth.getAccounts().then(async function(result){
+    	accounts = result;
+      //  if(accounts[0] != "0xBfD15b3e9BF69657FE0c6Bb02b66aD1dcd38a8a8")
+//        {alert("Under temporary maintenence! Check back in a few hours!")
+  //      return;
+   //     }
+       // }
+    	contract.methods.getTicketFeeWEIRange().call(async function(err,result){
+            ticketFee = web3.utils.fromWei(result[0], 'ether');
+        	try{
+        	    updateCurrentBlockNumber();
+        		await updateGUI();
+        		updateInGameBalance();
+        		updateWalletBalance();
+        	    getAlias(); 
+        		if(loadOnce == false){
+                    loadOnce = true;
+                    getMaxBids();
+        		    loadAllGameCards();
+        		    await sleep(500)
+                    loadEventListener();
+        		}
+        	}
+        	catch(err){
+        	    writeNotification(err);
+        		writeNotification("<p class=\"alert\">Extension not loaded, please refresh page.</p><BR>");
+        	}
+        });
+    });
+}
+
+function getAlias(){
+
+	var sendInfo = {from:accounts[0]};
+	contract.methods.getAliasIfSet(accounts[0]).call(sendInfo, function(err,result){
+        addressName =  parseAddress(result);
+	});	
+	
+}
+
+function toggleCreateGameForm(){
+    document.getElementById("createGameFormID").classList.toggle("show");
+    document.getElementById("cgfGameName").placeholder = "Bob's game";
+    $("#createGameModal").modal("hide");
+}
+
+function toggleAdvancedSettings(){
+    if( document.getElementById("DIV_advancedSettings").style.display == "block")
+        document.getElementById("DIV_advancedSettings").style.display = "none";
+    else
+        document.getElementById("DIV_advancedSettings").style.display = "block";
+}
+
+async function updateGUI()
+{
+    /*
+//	document.getElementById("ticket_fee").innerHTML = ('Current Ticket Fee: ' + "<IMG src=/images/logo_mini.png>" + ticketFee + "<BR>");
+    document.getElementById("user_buttons").innerHTML += "<button class=\"gui_button\" onclick=\"setAlias()\">SetAlias</button>";
+	document.getElementById("user_buttons").innerHTML += "<button class=\"gui_button\" onclick=\"depositHPB()\">Deposit HPB</button>";
+	document.getElementById("user_buttons").innerHTML += "<button class=\"gui_button\" onclick=\"withdrawHPB()\">Withdraw HPB</button>";
+	document.getElementById("user_buttons").innerHTML += "<button class=\"gui_button\" disabled onclick=\"createNewGame()\">Create Game</button>";
+	document.getElementById("user_buttons").innerHTML += "<button class=\"gui_button\" disabled onclick=\"leaveGame()\">Leave Game</button>";
+	document.getElementById("user_buttons").innerHTML += "<button class=\"gui_button\" disabled onclick=\"buyTicket()\">Buy Tickets</button>";
+	document.getElementById("user_buttons").innerHTML += "<button class=\"gui_button\" disabled onclick=\"startGame()\">Start Game</button>";
+	document.getElementById("user_buttons").innerHTML += "<button class=\"gui_button\" disabled onclick=\"startRound()\">Start Round</button>";
+	document.getElementById("user_buttons").innerHTML += "<button class=\"gui_button\" disabled onclick=\"sellTickets()\">Sell Tickets</button>";
+	document.getElementById("user_buttons").innerHTML += "<button class=\"gui_button\" disabled onclick=\"bidForTicket()\">Bid for Ticket</button>";
+	*/
+document.getElementById("user_buttons").innerHTML = `<h2 style=\"color:silver;display:block;font-family:courier;font-weight:bold;\">The Hodl Lottery</h2><p style=\"color:lightblue;font-family:courier new;font-size:12px;font-weight:bold;\">(Can you Hodl until the moon or will you dump your bag?)</p>
+        <DIV id=\"DIV_wgToken\" style=\"background-color:black;\"></DIV>
+        <DIV id = \"balances_div\" style=\"background-color:white;color:navy;font-weight:bold;width:45%;border: 2px solid silver;dispaly:block;text-align:center;margin:0 auto;\">
+            <DIV id=\"wallet_balance\"></DIV>
+            
+            <a class=\"btn btn-primary\" data-toggle=\"collapse\" href=\"#gameData\" role=\"button\" aria-expanded=\"false\" aria-controls=\"collapseExample\" style=\"background-color:white;color:navy;font-weight:bold;font-size:16px;border:none;\">
+                <DIV id=\"game_balance\" style=\"font-size:18px;\"></DIV>
+              </a>
+            <div class=\"collapse\" id=\"gameData\">
+              
+                All-time spent: <IMG src=/images/logo_mini.png><span id=\"DIV_alltimeSpent\"></span><BR>
+                All-time gained: <IMG src=/images/logo_mini.png><span id=\"DIV_alltimeGained\"></span><BR>
+                Games played: <span id=\"DIV_gamesPlayed\"></span><BR>
+            </div>  
+        </DIV>`
+
+await getWGTokenBalance();
+
+if(wgTokenBalance > 0){
+    
+    document.getElementById("DIV_wgToken").innerHTML += "<BUTTON id=\"y\" type=\"button\" data-toggle=\"collapse\" data-target=\"#vipInfo\" aria-expanded=\"false\" aria-controls=\"vipInfo\" style=\"background-color:black;color:gold;text-align:center;\">VIP</BUTTON><BR><IMG src=\"/images/wgtoken.png\" width=\"150px\">"
+    document.getElementById("DIV_wgToken").innerHTML += 
+    "<div class=\"collapse\" id=\"vipInfo\">" +
+    "<div style=\"border:2px solid gold; width:80%; display:block;text-align:center; margin:auto; background-color:black;color:gold; overflow:auto;class=\"card card-body\">" +
+    "<b>As a WG Token holder, you can create games of 100 players or more and receive a free ticket.<BR>" +
+    "If you happen to win one of those games, you will receive 75% of the actual winning pool reward instead<BR>" +
+    "of the full 100%.</b>"
+    "</div>" +
+    "</div>"
+    
+}
+
+document.getElementById("user_buttons").innerHTML += 
+`<DIV id = \"DIV_gameList\">
+    <h5>Get started | <A style="color:white;" href = "./howtoplay.html" target = "_blank">Tutorial</A></h5>
+    <TABLE style = \"text-align:center;margin:0 auto;background-color:black;width:400px; color:white;\">
+        <TR>
+            
+        </TR>
+        <TR>
+            <TD>
+                <div class=\"dropdown\">
+                  <button onclick=\"dropDownFunction('hpbDropDown')\" class=\"btn btn-secondary btn dropdown-toggle\" type=\"button\" id=\"dropdownMenuButton\" data-toggle=\"dropdown\" aria-haspopup=\"true\" aria-expanded=\"false\">
+                    HPB
+                  </button>
+                  <div class=\"dropdown-menu\" aria-labelledby=\"dropdownMenuButton\" id=\"hpbDropDown\">
+                      <a class="dropdown-item" href="javascript:depositHPB()">Deposit</a>
+                      <a class="dropdown-item" href="javascript:withdrawHPB()">Withdraw</a>
+                      <div class="dropdown-divider"></div>
+                      <a class="dropdown-item" href="javascript:sendHPB()">Send</a>
+                  </div>
+                </div>
+            </TD>
+            <TD>
+                <div class="dropdown">
+                  <button onclick="dropDownFunction('optionsDropDown')" class="btn btn-secondary btn dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    Options
+                  </button>
+                  <div class="dropdown-menu" aria-labelledby="dropdownMenuButton" id="optionsDropDown">
+                  <a class="dropdown-item" href="javascript:setAlias()">Set Alias</a>
+                  </div>
+                </div>
+            </TD>
+        </TR>
+    </TABLE>
+</DIV>`
+
+
+}
+	
+	
+function findGameIndex(gameID){
+    var gameIndex = -1
+    
+    for(var i = 0; i < allGamesArray.length; i++){
+        if(parseInt(allGamesArray[i]["gameID"]) == gameID){
+            gameIndex = i;
+            break;
+        }
+    }
+   return gameIndex;
+}
+
+function updateWalletBalance(){
+		web3.eth.getBalance(accounts[0]).then(function(wb){
+		walletBalance = web3.utils.fromWei(new web3.utils.BN(wb), 'ether');
+		document.getElementById("wallet_balance").innerHTML = "Wallet balance: " +   "<IMG src=/images/logo_mini.png><span id=\"DIV_walletBalance\">" + walletBalance  +  "</span>";
+	});		
+}
+
+function updateInGameBalance(){
+	var sendInfo = {from:accounts[0]};
+	contract.methods.getPlayerInfo(accounts[0]).call(sendInfo, function(err,result){
+		inGameBalance = web3.utils.fromWei(result["balance"], 'ether'); 
+		alltimeSpent = web3.utils.fromWei(result["lifetimeHPBSpent"], 'ether'); 
+		alltimeGained = web3.utils.fromWei(result["lifetimeHPBGained"], 'ether');
+		gamesPlayed = result["lifetimeGamesPlayed"];
+	
+		document.getElementById("game_balance").innerHTML = 'In-game balance: '  + "<IMG src=/images/logo_mini.png><span id=\"DIV_inGameBalance\">" + inGameBalance + "</span>";
+           
+	    
+	    		document.getElementById("DIV_alltimeSpent").innerHTML =  alltimeSpent;
+	    		document.getElementById("DIV_alltimeGained").innerHTML = alltimeGained;
+	    		document.getElementById("DIV_gamesPlayed").innerHTML = gamesPlayed;
+	    
+	});
+}
+
+
+/*
+async function loadNewGameCard(gameData){
+
+        allGamesArray.push({...gameData}); //copies result to be mutable
+        gameData["name"] = web3.utils.toAscii(gameData["name"] );
+        gameData["hpbWinnerPool"] = web3.utils.fromWei(gameData["hpbWinnerPool"]);
+        gameData["ticketFee"] = web3.utils.fromWei(gameData["ticketFee"]);
+
+        var currentRoundString;
+        if(gameData["currentRoundNumber"] != "0"){
+            currentRoundString = "Current Round: " + gameData["currentRoundNumber"]  + "<BR>";
+        }
+        else{
+            currentRoundString = "Current Round: Not yet started. <BR>";
+        }
+        var cardStyle;
+        if(gameData["isGameActivez"] == true)
+            cardStyle = "card text-black bg-warning mb-3"
+        else
+            cardStyle = "card border-dark mb-3"
+            
+        document.getElementById("DIV_gameCards").innerHTML +=
+        "<span id=\"dsp304lj382hd72hoasid8y341oskmxnda0kdj" + gameData["gameID"] + "start\" hidden></span>" + 
+        "<div class=\"row flex-row flex-nowrap\">"+
+            "<div class=\"" + cardStyle + "\" style=\"min-width: 18rem;max-width: 18rem;\">"+
+            "<div class=\"card-header\">" + gameData["name"] + "</div>"+
+            "<div class=\"card-body text-dark\">"+
+                "<h6 class=\"card-title\"><b>Current Prize Pool: " + gameData["hpbWinnerPool"] + " HPB</b></h6>"+
+                
+                "<p class=\"card-text\">" + 
+                "Price per ticket: " + gameData["ticketFee"]   + " HPB <BR>" +
+                "Total tickets: " + gameData["entryCount"]  + " / " +  gameData["minimumTicketCount"]  + "<BR>" +
+                 "</p>"+
+            "</div>"+
+            "<div class=\"card-footer bg-transparent border-success\">"+
+                "<small class=\"text-muted\">" + currentRoundString + "</small>"+
+            "</div>" +
+        "</div>" +
+        "<span id=\"dsp304lj382hd72hoasid8y341oskmxnda0kdj" + gameData["gameID"] + "end\" hidden></span>" 
+}
+*/
+
+
+function removeGameCard(gameID){
+    var gameIndex = findGameIndex(gameID);
+    
+    if(gameIndex != -1){
+        document.getElementById("card"+gameID).remove(); //remove from display
+        allGamesArray.splice(gameIndex, 1); //remove data from gameq
+        document.getElementById("DIV_hpbGameID" + gameID).remove();
+    }
+}
+
+function showGameAtIndex(index){
+
+ 
+/*
+    struct Game
+    {
+        uint256 gameID;
+        uint256 currentRoundNumber;
+        uint256 ticketCountAtStart;
+        bytes32 name;
+        uint256 ticketFee;
+        uint256 minimumTicketCount;
+        bool isGameActive;
+        bool isGamePending;
+        bool isGameComplete;
+        bool isEndGameReady;
+        bool exists; //if game exists
+        uint256 hpbWinnerPool;
+        uint256 entryCount;
+      //  address playerWinner;
+        uint48[8] lastEliminated;
+        uint256 blockCountActionReadyIndex;
+*/
+      //  console.log("index = " + index)
+        allGamesArray[index]["name"] = web3.utils.toAscii(allGamesArray[index]["name"] );
+        allGamesArray[index]["hpbWinnerPool"] = web3.utils.fromWei(allGamesArray[index]["hpbWinnerPool"]);
+        allGamesArray[index]["ticketFee"] = web3.utils.fromWei(allGamesArray[index]["ticketFee"]);
+
+        var currentRoundString;
+        if(allGamesArray[index]["isEndGameReady"] == true){
+             currentRoundString = " Current Round: Game is over. Use [finish game] from menu to collect reward.<BR>"
+        }
+        else if(allGamesArray[index]["currentRoundNumber"] != "0"){
+            currentRoundString = "Current Round: " + allGamesArray[index]["currentRoundNumber"]  + "<BR>";
+        }
+        else{
+            currentRoundString = "Current Round: Not yet started. <BR>";
+        }
+
+ 
+        var bgColor;
+        var gameID = allGamesArray[index]["gameID"]
+        
+        document.getElementById("DIV_gameCards").innerHTML += 
+        "<DIV id=\"card" + gameID + "\">" + 
+        "<div class=\"row flex-row flex-nowrap\">"+
+            "<div class=\"" + "card border-dark mb-3" + "\" style=\"min-width: 18rem;max-width: 18rem;\">"+
+            "<div class=\"card-header\" id=\"card-header" + gameID + "\" style=\"background-color:white;\" ><b>" + allGamesArray[index]["name"] + "</b> <span style=\"font-size:1rem;\">[" + allGamesArray[index]["gameID"] + "]</div>"+
+            "<div class=\"card-body text-dark\">"+
+                "<h6 class=\"card-title\"><b>Minimum Prize: " +  "<SPAN id=\"gamePrize" + gameID + "\">" + (allGamesArray[index]["minimumTicketCount"] * allGamesArray[index]["ticketFee"] * 0.98).toFixed(10)*1 + " </SPAN> HPB</b></h6>" +
+                "<h6 class=\"card-title\"><b>Current Prize: " +  "<SPAN id=\"currentPrize" + gameID + "\">" + parseFloat((allGamesArray[index]["hpbWinnerPool"])).toFixed(12)*1 + " </SPAN> HPB</b></h6>" +
+                "<p class=\"card-text\">" + 
+                "Price per ticket: " + allGamesArray[index]["ticketFee"]   + " HPB <BR>" +
+                 "Total tickets: " + "<SPAN id=\"gameTickets" + gameID + "\">" + allGamesArray[index]["entryCount"]  + "</SPAN> / " +  allGamesArray[index]["minimumTicketCount"]  + "<BR>" +
+                 "</p>"+
+                 
+       
+                "<DIV id=\"DIV_hpbGameInfo\">" +
+                  "<button id=\"BUTTON_hpbGameID" + gameID + "\" onclick=\"showGameInfo(" + gameID + "," + false + "); \" class=\"btn btn-primary\" type=\"button\"    data-toggle=\"collapse\" data-target=\"#DIV_hpbGameID" + gameID + "\" aria-expanded=\"false\" aria-controls=\"DIV_hpbGameID" + gameID + "\">" +
+                    "Show" +
+                  "</button>" +
+                "</DIV>" +
+
+     
+            "</div>"+
+            "<div class=\"card-footer bg-transparent border-success\">"+
+                "<small class=\"text-muted\">" +  "<DIV id=\"gameRound" + gameID + "\">" + currentRoundString + "</DIV></small>"+
+            "</div>" +
+        "</div>" +
+        "</DIV>"
+        //add the collapsable DIV
+        document.getElementById("DIV_gameDisplay").innerHTML += "<DIV class=\"collapse\" id = \"DIV_hpbGameID" + gameID + "\"" + " aria-expanded=\"false\" display:block;></DIV>";
+        console.log("index=" + index)
+        setGameCardStyle(gameID);
+}
+
+//DIV_sgTicketsOwned
+
+var TO_WEI = 1000000000000000000;
+
+async function showGameInfo(gameID, force){
+
+        if(document.getElementById("DIV_hpbGameID" + gameID) == null){
+            return;
+        }
+        if(!force){
+            if(document.getElementById("BUTTON_hpbGameID" + gameID).innerHTML == "Show")
+                document.getElementById("BUTTON_hpbGameID" + gameID).innerHTML = "Hide";
+            else if(document.getElementById("BUTTON_hpbGameID" + gameID).innerHTML == "Hide"){
+                document.getElementById("BUTTON_hpbGameID" + gameID).innerHTML = "Show";
+                return;
+            }
+        }
+
+        var ticketsOwned;
+        var ticketsForSale;
+        var sendInfo = {from:accounts[0]};
+        
+    	await contract.methods.getPlayerGameInfo(gameID).call(sendInfo, async function(err,result){
+
+        	ticketsOwned = parseInt(result["ticketsOwned"]);
+            ticketsForSale = result["ticketsForSale"];
+            var gameArrayIndex = findGameIndex(gameID);
+            var game = allGamesArray[gameArrayIndex];
+            var chancesDeno;
+
+            var winningAmount = Math.max(game["minimumTicketCount"] * game["ticketFee"] * 0.98 , 
+            allGamesArray[gameArrayIndex]["hpbWinnerPool"]);
+            winningAmount = parseFloat(web3.utils.fromWei(String(winningAmount * TO_WEI))).toFixed(12)*1;
+
+            
+            game["lastEliminated"] = [...game["lastEliminated"]]
+            var lastEliminatedString = "";
+
+            for(var i = 0; i != 8; i++){
+                if(game["lastEliminated"][i] != 0 && game["lastEliminated"][i] != INVALID_VALUE)
+                    lastEliminatedString += parseAddress(game["lastEliminated"][i]) + "<BR>"
+            }
+            
+            
+            var  ticketString;
+            if(game["isEndGameReady"] == true){
+                currentRoundString = "Game is over, use finish game action<BR>to collect reward.";
+                chancesDeno = allGamesArray[gameArrayIndex]["entryCount"]
+                ticketString = "remaining";
+            }
+            else if(game["currentRoundNumber"] != "0"){
+                currentRoundString = game["currentRoundNumber"];
+                chancesDeno = allGamesArray[gameArrayIndex]["entryCount"]
+                ticketString = "remaining";
+            }
+            else{
+                currentRoundString = "Not yet started.";
+                chancesDeno = Math.max(game["minimumTicketCount"], allGamesArray[gameArrayIndex]["entryCount"])
+                ticketString = "purchased";
+            }
+
+
+         //   document.getElementById("DIV_hpbGameID" + gameID).innerHTML = "ooo"
+         //   $('DIV_hpbGameID' + gameID).collapse("toggle");
+         
+         //   document.getElementById("DIV_hpbGameID" + gameID).innerHTML = gameID;
+            //
+            var a =
+            "<div class=\"row flex-row flex-nowrap\" style=\"padding-left:25px;padding-right:25px;\" >" +
+                "<div style=\"max-width: 55:rem;min-width: 55rem; display:block;margin:0px;border-radius: 16px;color:black;background-color:#15A7C5;border:1px solid black;text-align:left;\">" +
+                "<DIV style=\"background-color:#EEEEEE;padding-top:20px;padding-bottom:20px;border-radius: 16px;\">" +
+                "<HR><h3 style=\"color:black;text-align:center\"><b>" + game["name"] + "</b><span style=\"font-size:1.2rem;\"> [" + gameID + "]</span>" +
+                "<div class=\"dropdown\" style=\"margin:0 auto;text-align:center;display:block;\">" + 
+                "<HR>" +
+                  "<button class=\"btn btn-secondary btn-lg dropdown-toggle\" type=\"button\" id=\"dropdownMenuButton\" data-toggle=\"dropdown\" aria-haspopup=\"true\" aria-expanded=\"false\">" +
+                    "Action" +
+                  "</button>" +
+                  "<div class=\"dropdown-menu\" aria-labelledby=\"dropdownMenuButton\" id=\"optionsDropDown\">" +
+                  "<a id = \"button_BuyTickets" + gameID + "\" class=\"dropdown-item\" href=\"javascript:buyTicketsForm(" + gameID + ");\">Buy tickets</a>" +
+                  "<a id = \"button_LeaveGame" + gameID + "\"  class=\"dropdown-item\" href=\"javascript:leaveGame(" + gameID + ")\">Leave Game</a>" +
+                  "<a id = \"button_StartGame" + gameID + "\" class=\"dropdown-item\" href=\"javascript:startGame(" + gameID + ")\">Start Game</a>" +
+                  "<a id = \"button_StartRound" + gameID + "\" class=\"dropdown-item\" href=\"javascript:startRound(" + gameID + ")\">Start Next Round</a>" +
+                  "<div class=\"dropdown-divider\"></div>" + 
+                  "<a id = \"button_ViewExchange" + gameID + "\" class=\"dropdown-item\" href=\"javascript:viewExchange(" + gameID + ",true);\">View Exchange</a>" +
+                  "<div class=\"dropdown-divider\"></div>" + 
+                  "<a id = \"button_FinishGame" + gameID + "\" class=\"dropdown-item\" href=\"javascript:finishGame(" + gameID + ")\">Finish Game</a>" +
+                  "</div>" +
+                "</div>" +
+                "</h3>" +
+
+                
+                "</DIV>" +
+
+
+                
+
+            "<TABLE border = \"2px solid red\"  frame=\"void\" rules=\"all\" style=\"font-size:1.6rem;font-weight:bold;\">" +
+            
+            
+            "<TR>" +
+            "<TD>" +
+            "Current Round " +
+            "<TD>" +
+            "<span id = \"DIV_sgCurrentRound" + gameID + "\" >" + currentRoundString + "</span></BR>" +
+            "</TD>" +
+            "</TR>" +
+    
+            "<TR>" +
+            "<TD>" +
+            "Ticket Fee: " +
+            "</TD>" +
+            "<TD>" +
+            "<span id = \"DIV_sgTicketFee" + gameID + "\">" + game["ticketFee"] + " HPB</span></BR>" +
+            "</TD>" +
+            "</TR>" +
+    
+    
+            "<TR>" +
+            "<TD>" +
+            "Total tickets owned: " +
+            "</TD>" +
+            "<TD>" +
+            "<span id = \"DIV_sgTicketsOwned" + gameID + "\">" + ticketsOwned + "</span></BR>" +
+            "</TD>" +
+            "</TR>" +  
+            
+            
+            "<TR>" +
+            "<TD>" +
+            "All tickets " + ticketString + ": " +
+            "</TD>" +
+            "<TD>" +
+            "<span id = \"DIV_sgTicketStatus" + gameID + "\">" + game["entryCount"] + " / " + game["minimumTicketCount"] + "</span></BR>"+ 
+            "</TD>" +
+            "</TR>" +
+    
+            "<TR>" +
+            "<TD>" +
+            "Current Odds: " +
+            "</TD>" +
+            "<TD>" +
+            "<span id = \"DIV_sgChancesWinning" + gameID + "\">" + ((100*ticketsOwned) / chancesDeno).toFixed(2) + "% " + "chance to win " + winningAmount + " HPB</span></BR>"+ 
+            "</TD>" +
+            "</TR>" +      
+
+    
+            "<TR>" +
+            "<TD>" +
+            "Winning ticket reward:" +
+            "</TD>" +
+            "<TD>" +
+            "<span id = \"DIV_sgHPBWinnerPool" + gameID + "\">" + winningAmount + " HPB</span></BR>" +
+            "</TD>" +
+            "</TR>" +
+
+
+            "<TR>" +
+            "<TD>" +
+            "Tickets eliminated last round:" +
+            "</TD>" +
+            "<TD>" +
+            "<span id = \"DIV_lastEliminated" + gameID + "\">" + lastEliminatedString + "</span></BR>"+   
+            "</TD>" +
+            "</TR>" +
+            
+            "<TR>" +
+            "<TD>" +
+            "Action delay:" +
+            "</TD>" +
+            "<TD>" +
+           "<SPAN id=\"DIV_blocksRemaining" + gameID + "\"></SPAN>" + 
+            "<SPAN id=\"gameSpinner" + gameID + "\" class=\"spinner-border text-dark\" role=\"status\" ></SPAN>" +
+            "</div>" +
+            "</TD>" +
+            "</TR>" +
+        
+            
+            "</TABLE>" +
+            
+            "</div>" +
+            "</div>" 
+
+            document.getElementById("DIV_hpbGameID" + gameID).innerHTML = a;
+
+            if(game["currentRoundNumber"] != 0){
+                changeActionMenuState(gameID, "BuyTickets", true);
+            }
+            if(game["currentRoundNumber"] != 0 || ticketsOwned ==  0){
+                changeActionMenuState(gameID, "LeaveGame", true);
+            }
+
+            if(game["currentRoundNumber"] != 0 || currentBlockNumber < game["blockCountActionReadyIndex"] || (game["entryCount"] < game["minimumTicketCount"]) || ticketsOwned == 0){
+                changeActionMenuState(gameID, "StartGame", true);
+            }
+
+            if(game["currentRoundNumber"] == 0 || currentBlockNumber < game["blockCountActionReadyIndex"] || game["isEndGameReady"] == true || ticketsOwned == 0){
+                changeActionMenuState(gameID, "StartRound", true);
+            }
+            if(game["currentRoundNumber"] == 0 || game["isEndGameReady"] == true){
+                changeActionMenuState(gameID, "ViewExchange", true);
+            }               
+            if(game["isEndGameReady"] == false){
+                changeActionMenuState(gameID, "FinishGame", true);
+            }      
+
+           //shows the spinner
+           waitForActionBlockThread(gameID)
+            
+            
+        });
+        
+    
+    
+        
+}
+
+
+function changeActionMenuState(gameID, menuItem, isDisabled)
+{
+    try{
+        if(menuItem == "BuyTickets"){
+            if(isDisabled)
+                document.getElementById("button_BuyTickets" + gameID).classList.add('disabled');
+            else
+                document.getElementById("button_BuyTickets" + gameID).classList.remove('disabled');
+            
+        }
+        else if(menuItem == "LeaveGame"){
+            if(isDisabled)
+                document.getElementById("button_LeaveGame" + gameID).classList.add('disabled');
+            else
+                document.getElementById("button_LeaveGame" + gameID).classList.remove('disabled');
+            
+        }
+        else if(menuItem == "StartGame"){
+            
+            if(isDisabled)
+                document.getElementById("button_StartGame" + gameID).classList.add('disabled');
+            else
+                document.getElementById("button_StartGame" + gameID).classList.remove('disabled');
+            
+        }
+        else if(menuItem == "StartRound"){
+            if(isDisabled)
+                document.getElementById("button_StartRound" + gameID).classList.add('disabled');
+            else
+                document.getElementById("button_StartRound" + gameID).classList.remove('disabled');
+            
+        }
+        else if(menuItem == "ViewExchange"){
+            if(isDisabled)
+                document.getElementById("button_ViewExchange" + gameID).classList.add('disabled');
+            else
+                document.getElementById("button_ViewExchange" + gameID).classList.remove('disabled');
+        }
+        else if(menuItem == "FinishGame"){
+            if(isDisabled)
+                document.getElementById("button_FinishGame" + gameID).classList.add('disabled');
+            else
+                document.getElementById("button_FinishGame" + gameID).classList.remove('disabled');
+        }
+    }
+    catch{
+        
+    }
+    return;
+}
+
+
+
+
+
+function setGameCardStyle(gameID){
+    
+    var gameIndex = findGameIndex(gameID)
+    console.log("gameid=" + gameID)
+    if(allGamesArray[gameIndex]["isEndGameReady"] == true){
+        document.getElementById("gameRound" + gameID).innerHTML = "Current Round: Game is over. Use [finish game] from menu to collect reward"
+        bgColor = "red";
+    }
+    else if(allGamesArray[gameIndex]["currentRoundNumber"] != 0)
+        bgColor = "gold";
+    else
+        bgColor = "#36ED64";
+
+    document.getElementById("card-header" + gameID).style.background =  bgColor;
+    
+}
+
+async function getWGTokenBalance() {
+	var sendInfo = {from:accounts[0]};
+    await contract.methods.getWGTokenBalance().call(sendInfo, async function(err,result){ 
+        wgTokenBalance = result;
+    });
+}
+
+function loadAllGameCards(){
+
+	var sendInfo = {from:accounts[0]};
+    contract.methods.getGameCount().call(sendInfo, async function(err,result){
+		var gameCount = result["gameCount"];
+		var activeGames = result["activeGames"];
+        var gamesFound = 0;
+		for(var i = 0; i != gameCount; i++){
+            if(gamesFound == activeGames){
+                break; //leave loop when all active games are found
+            }
+            
+            ret = await loadGameInfoByID(i)
+            if(ret == true){
+                showGameAtIndex(gamesFound); //show game one at a time
+                
+                gamesFound ++;
+            }
+         
+        }
+    });
+}
+
+async function loadGameInfoByID(id){
+    var sendInfo = {from:accounts[0]};
+    var ret = false;
+    await contract.methods.getGameByID(id).call(sendInfo, function(err,result){
+        var gameExists = result["exists"];
+        if(gameExists == false)
+            ret = false;
+        else{
+            allGamesArray.push({...result}); //copies result to be mutable
+            ret = true;
+        }
+    });
+    console.log("RET=" + ret)
+    return ret;
+}
+
+
+
+function buyTickets(gameID, ticketCount){
+    
+    $("#DIV_BuyTickets").modal("hide");
+    if(ticketCount <  1 || ticketCount > 8){
+        alert("Ticket amount must be between 1 - 8 tickets per transaction.")
+        return;
+    }
+	var sendInfo = {from:accounts[0],gasPrice:18000000000};
+	contract.methods.buyTickets(gameID,ticketCount).send(sendInfo, function(err,trxHash){
+		if(typeof trxHash !== "undefined"){
+			writeNotification("[Buy Tickets] transaction recorded: " +  "<A style=\"color:white;\" href=https://hpbscan.org/tx/" + trxHash + " target = \"_blank>\">" + trxHash + "</A><BR>" + "Awaiting network confirmation...<BR>");
+		}
+	})
+	.once("confirmation",function(confirmation, receipt){
+    		writeNotification("[Buy Tickets] was successful."  + "<BR>");
+            updateInGameBalance();
+        })
+	.on("error", function(error){
+    		writeNotification("Transaction was cancelled or an error occurred.<BR>");
+        });
+}
+
+function setAlias(){
+    
+	var aliasName = window.prompt("Change your address alias name to:", "Nickname");
+	if(aliasName == null){
+	    return
+	}
+	aliasName = aliasName.trimLeft().trimRight();
+    aliasName = web3.utils.fromAscii(aliasName);
+    //needs to be 2 bytes less than address size due to conversion operations
+    if(aliasName.length <= 40 && aliasName.length > 0){
+
+        contract.methods.setAlias(aliasName).estimateGas({from:accounts[0]}).then(function(gasLimit){
+                gasLimit = (gasLimit * 1.1).toFixed(0);
+                if(gasLimit < minGas)
+                    gasLimit = minGas;
+                var sendInfo = {from:accounts[0], gas:gasLimit, gasPrice:'18000000000'};
+
+        		contract.methods.setAlias(aliasName).send(sendInfo)
+            	.on("transactionHash",function(trxHash){
+            			writeNotification("[SetAlias] transaction recorded: " + "<A style=\"color:white;\" href=https://hpbscan.org/tx/" + trxHash + " target = \"_blank\">" + trxHash + "</A><BR>");
+            	})
+            	.once("confirmation",function(confirmation, receipt){
+                			writeNotification("[SetAlias] to " + web3.utils.toAscii(aliasName) + " has been confirmed."  + "<BR>");
+                			addressName = web3.utils.toAscii(aliasName);
+                			
+            	})
+            	.on("error",function(error){
+            			writeNotification("Transaction was cancelled or an error occurred.<BR>");
+            	});
+        });
+    }
+	else{ 
+        alert("Alias Name must be 19 bytes or less (19 ascii, 9 unicode)");
+        setAlias();
+        return;
+	}
+
+}
+ //TODO ADD CATCH STATEMENT FOR THIS
+function startGame(gameID){
+    
+	var sendInfo = {from:accounts[0], gasPrice:24000000000};
+    contract.methods.startGame(gameID).estimateGas(sendInfo).then(function(gasLimit){
+        if(gasLimit > 90000000)
+        {
+            alert("The game was already started or you do not own any tickets.")
+            return
+        }
+        gasLimit = (gasLimit * 1.1).toFixed(0);
+        sendInfo = {from:accounts[0], gasPrice:'18000000000'}; 
+    	contract.methods.startGame(gameID).send(sendInfo, function(err,trxHash){
+    		if(typeof trxHash !== "undefined"){
+    			writeNotification("[Start Game] transaction recorded: " +  "<A style=\"color:white;\" href=https://hpbscan.org/tx/" + trxHash + " target = \"_blank>\">" + trxHash + "</A><BR>" + "Awaiting network confirmation...<BR>");
+    		}
+    	
+    	})
+    	.once("confirmation",function(confirmation, receipt){
+        		writeNotification("[Start Game] was successful."  + "<BR>");
+        		
+    
+            })
+    	.on("error", function(error){
+        		writeNotification("Transaction was cancelled or an error occurred.<BR>");
+    
+            });
+    });
+}  
+
+function startRound(gameID){
+    
+	var sendInfo = {from:accounts[0], gasPrice:18000000000};
+    contract.methods.startNextRound(gameID).estimateGas(sendInfo).then(function(gasLimit){
+        if(gasLimit > 90000000){
+            alert("This action is not available, the round was already started.")
+            return
+        }
+        gasLimit = (gasLimit * 1.1).toFixed(0);
+        sendInfo = {from:accounts[0], gas:gasLimit, gasPrice:'18000000000'}; 
+    	contract.methods.startNextRound(gameID).send(sendInfo, function(err,trxHash){
+    		if(typeof trxHash !== "undefined"){
+    			writeNotification("[Start Round] transaction recorded: " +  "<A style=\"color:white;\" href=https://hpbscan.org/tx/" + trxHash + " target = \"_blank>\">" + trxHash + "</A><BR>" + "Awaiting network confirmation...<BR>");
+    		}
+    	})
+    	.once("confirmation",function(confirmation, receipt){
+        		writeNotification("[Start Round] of game with ID: " + gameID + " was successful."  + "<BR>");
+        		updateWalletBalance();
+                updateInGameBalance();
+            })
+    	.on("error", function(error){
+        		writeNotification("Transaction was cancelled or an error occurred.<BR>");
+    
+            });
+    });
+}  
+
+
+
+function createGame(){
+    var gameName = document.getElementById("cgfGameName").value;
+    var costPerTicket = document.getElementById("cgfCostPerTicket").value;
+    var buying = document.getElementById("cgfTicketsToBuy").value;
+    var minTicketCount = document.getElementById("cgfMinTicketCount").value;
+    var gameDelay = document.getElementById("cgfGameBlockDelay").value;
+    var roundDelay = document.getElementById("cgfGameRoundDelay").value;
+
+
+    var sendInfo = {from:accounts[0], gasPrice:'18000000000'};
+	contract.methods.createGame(web3.utils.toWei(costPerTicket),minTicketCount,buying, web3.utils.fromAscii(gameName), gameDelay, roundDelay).send(sendInfo)
+    	    .on("transactionHash",function(trxHash){
+        			writeNotification("[Create Game] transaction recorded: " + "<A style=\"color:white;\" href=https://hpbscan.org/tx/" + trxHash + " target = \"_blank\">" + trxHash + "</A><BR>" + "Awaiting network confirmation...<BR>");
+        	})
+        	.once("confirmation",function(confirmation, receipt){
+            		writeNotification("[CreateGame] was successful."  + "<BR>");
+                    updateInGameBalance();
+            })
+            .on("confirmation", function(confirmation, receipt){
+                    blocksRemaining = blocksBetweenRounds - confirmation;
+                    if(blocksRemaining > 0){
+                        writeNotification(blocksRemaining + " blocks remaining before new round option is enabled.<BR>");
+                    }
+                    else if(blocksRemaining == 0){
+                        writeNotification(blocksRemaining + " a new round can begin.<BR>");  
+                    }
+        	})
+        	.on("error",function(error){
+        			writeNotification("<P id = \"alert\"> Transaction was cancelled or an error occurred.</P><BR>");
+        	});
+        	toggleCreateGameForm();
+        	updateInGameBalance();
+}
+
+function createGameConfirm(){
+    
+    var gameName = document.getElementById("cgfGameName").value;
+    var costPerTicket = document.getElementById("cgfCostPerTicket").value;
+    var buying = parseInt(document.getElementById("cgfTicketsToBuy").value);
+    var minTicketCount = document.getElementById("cgfMinTicketCount").value;
+    var cost = (costPerTicket * buying).toFixed(12)*1;
+    var newBalance = parseFloat(inGameBalance -  cost).toFixed(12)*1
+    var gameDelay = document.getElementById("cgfGameBlockDelay").value; 
+    var roundDelay = document.getElementById("cgfGameRoundDelay").value;
+    if(parseInt(gameDelay) > 600 || parseInt(roundDelay) > 60){
+        alert("Game delay must be between 0-600 and round delay must be 0-60.");
+        return;
+    }
+    if(minTicketCount  < 2){
+        alert("Must allow at least 2 tickets  per game.");
+        return;
+    }
+
+    gameName = gameName.trimLeft().trimRight();
+
+    if(parseInt(web3.utils.toWei(costPerTicket)) < parseInt(ticketFeeMin) || parseInt(web3.utils.toWei(costPerTicket)) > parseInt(ticketFeeMax)){
+        alert("Ticket cost must be between " + web3.utils.fromWei(ticketFeeMin) + " and " + web3.utils.fromWei(ticketFeeMax) + " HPB.")
+        return
+    }
+    if(buying > 8 || buying < 1){
+        alert("Must buy between 1 and 8 tickets.")
+        return;
+    }
+    if(gameName.length < 1 || gameName.length > 30){
+        alert("Game Name must be between 1 and 30 characters.");
+        return;
+    }
+ 
+    if(wgTokenBalance > 0 && minTicketCount >= 100){
+        newBalance += parseFloat(costPerTicket).toFixed(12)*1.0; //refund cost of one ticket
+    }
+    if(newBalance < 0){
+        balanceString = "<span style=\"color:red;\">Not enough HPB in your game wallet.</b>\r\n\r\n";
+        toggleCreateGameForm();
+        writeNotification("<P id = \"alert\"> Not enough HPB in game wallet to create the game.</P><BR>");
+        return;
+    }
+    
+    //show confirmation window
+
+    document.getElementById("confirmGameDetailDIV").innerHTML = "This action will deduct HPB from your in-game balance:\n\
+    <b>Cost per Ticket: " + costPerTicket + " HPB\r\n\
+    Tickets to purchase: " + buying + "\r\n\
+    Total cost: " +  cost + " HPB \r\n\
+    Approximate value: $" + (hpbPrice * cost).toFixed(12)*1 + "\r\n\
+    Old balance: " + inGameBalance + " HPB\r\n\
+    New balance: " + newBalance + " HPB</b>\r\n\r\n"
+    
+    if(wgTokenBalance > 0 && minTicketCount >= 100){
+        document.getElementById("confirmGameDetailDIV").innerHTML += `WG Token VIP Game
+        As a WG Token holder, you are eligible for a free ticket in games that you create that
+        have a minimum player count of 100 tickets or more. Upon winning, you will receive 75% of
+        the actual reward with 25% going to the developer. However, you can also sell your ticket
+        in the exchange at any time after the game starts and you will receive 100% of that ticket price you set.
+        <B>Continue to create the game?</B>`;
+    }
+    else{
+        document.getElementById("confirmGameDetailDIV").innerHTML += "2% of the ticket cost is the usage fee: " + "(" + costPerTicket + " X " + buying + ") / 50 = " + (cost / 50).toFixed(12)*1 + " HPB\r\n\
+        98% of ticket cost will be added to the winner pool: " + 49 * cost / 50 + " HPB\r\n\
+        You can leave the game at anytime before the game starts\r\n\
+        for a full refund.\r\n\
+        There will be another confirmation screen from your web3 \r\n\
+        enabled browser for sending the transaction after this one.\r\n\r\n\
+        <B>Continue to create the game?</B>";
+    }
+    
+    $("#createGameModal").modal();
+
+}
+
+
+function leaveGame(gameID)
+{
+	var sendInfo = {from:accounts[0], gasPrice:18000000000};
+	contract.methods.leaveGame(gameID).send(sendInfo)
+	    .on("transactionHash",function(trxHash){
+    			writeNotification("[Leave Game] transaction recorded: " + "<A style=\"color:white;\" href=https://hpbscan.org/tx/" + trxHash + " target = \"_blank\">" + trxHash + "</A><BR>" + "Awaiting network confirmation...<BR>");
+    	})
+    	.once("confirmation",function(confirmation, receipt){
+        		document.getElementById("BUTTON_hpbGameID" + gameID).innerHTML = "Show";
+        	//	document.getElementById("BUTTON_hpbGameID" + gameID).innerHTML = "Hide";
+        	//	document.getElementById("DIV_hpbGameID" + gameID).collapse('hide');
+            //    updateWalletBalance();
+                window.scrollTo(0,0);
+        })
+    	.on("error",function(error){
+    			writeNotification("<P id = \"alert\"> Transaction was cancelled or an error occurred.</P><BR>");
+    	});
+}
+
+
+
+var minGas = 21000;
+function depositHPB()
+{
+    var firstConfirmation = false;
+	var depositAmount = Number(window.prompt("How many HPB to deposit?", ticketFee));
+	if(depositAmount <= 0 || isNaN(depositAmount))
+		return
+	var depositAmountWEI = web3.utils.toWei(depositAmount.toString(), 'ether')
+	
+	contract.methods.deposit().estimateGas({from:accounts[0], value:depositAmountWEI}).then(function(gasLimit){
+	        gasLimit = (gasLimit * 1.1).toFixed(0);
+	        if(gasLimit < minGas)
+	            gasLimit = minGas;
+            var sendInfo = {from:accounts[0], gas:gasLimit, gasPrice:18000000000, value:depositAmountWEI};
+
+        	contract.methods.deposit().send(sendInfo)
+            	.on("transactionHash",function(trxHash){
+            			writeNotification("[Deposit] transaction recorded: " + "<A style=\"color:white;\" href=https://hpbscan.org/tx/" + trxHash + " target = \"_blank\">" + trxHash + "</A><BR>" + "Awaiting network confirmation...<BR>");
+            	})
+            	.on("error",function(error){
+            			writeNotification("Transaction was cancelled or an error occurred.<BR>");
+            	});
+	});
+
+}
+
+function withdrawHPB()
+{
+	var withdrawAmount = Number(window.prompt("How many HPB to withdraw?", inGameBalance));
+	if(isNaN(withdrawAmount))
+		return;
+
+	if(withdrawAmount > 0 && withdrawAmount <= inGameBalance) {	
+
+		withdrawAmount = web3.utils.toWei(withdrawAmount.toString(), 'ether')
+		if(typeof withdrawAmount === "undefined")
+			return
+		
+        contract.methods.withdraw(withdrawAmount).estimateGas({from:accounts[0]}).then(function(gasLimit){
+                gasLimit = (gasLimit * 1.1).toFixed(0);
+                if(gasLimit < minGas)
+                    gasLimit = minGas;
+                var sendInfo = {from:accounts[0], gas:gasLimit, gasPrice:'18000000000'};
+                contract.methods.withdraw(withdrawAmount).send(sendInfo)
+                .on("transactionHash",function(trxHash){
+                		writeNotification("[Withdraw] transaction recorded: " + "<A style=\"color:white;\" href=https://hpbscan.org/tx/" + trxHash + " target = \"_blank\">" + trxHash + "</A><BR>");
+                })
+                .on("error",function(error){
+                		writeNotification("Transaction was cancelled or an error occurred.<BR>");
+                });
+        });
+	}
+
+}
+
+function sendHPB(){
+$("#DIV_SendHPBModal").modal("show");
+
+}
+
+
+
+//setInterval( refreshMessages, 5000 );
+
+function refreshMessages()
+{
+    $.ajax({
+        url: 'chat.php',
+        type: 'GET',
+        dataType: 'html'
+    })
+    .done(function( data ) {
+        $('#chat').html( data ); // data came back ok, so display it
+    })
+    .fail(function() {
+        $('#msgs').prepend('Error retrieving new messages..'); // there was an error, so display an error
+    });
+}
+
+
+
+
+/*
+function createNewGame()
+{
+	var withdrawAmount = Number(window.prompt("How many HPB to withdraw?", inGameBalance));
+
+	if(isNaN(withdrawAmount))
+		return;
+
+	if(withdrawAmount > 0 && withdrawAmount <= inGameBalance) {	
+
+		withdrawAmount = web3.utils.toWei(withdrawAmount.toString(), 'ether')
+		if(typeof withdrawAmount === "undefined")
+			return
+		
+		var sendInfo = {from:accounts[0]};
+
+		contract.methods.withdraw(withdrawAmount).send(sendInfo)
+    	.on("transactionHash",function(trxHash){
+    			document.getElementById("contract_notification").innerHTML += "[Withdraw] transaction recorded: " + "<A style=\"color:white;\" href=https://hpbscan.org/tx/" + trxHash + " target = \"_blank\">" + trxHash + "</A><BR>" + "Awaiting network confirmation...<BR>";
+    	})
+    	.once("confirmation",function(confirmation, receipt){
+        			document.getElementById("contract_notification").innerHTML += "[Withdraw] of " + depositAmount.toString() + " HPB has been confirmed."  + "<BR>";
+			updateInGameBalance();
+			updateWalletBalance();
+    	})
+    	.on("error",function(error){
+    			document.getElementById("contract_notification").innerHTML += "An error occurred with [Withdraw]: "  + error + "<BR>";
+    	});
+	}
+
+}*/
+
+
+/* When the user clicks on the button,
+toggle between hiding and showing the dropdown content */
+function dropDownFunction(divName) {
+    
+    if(document.getElementById(divName).classList.contains('show')){
+        document.getElementById(divName).classList.remove('show');
+        return;
+    }
+
+    var dropdowns = document.getElementsByClassName("dropdown-menu");
+  //debugging  
+  //removeGameCard(0)
+  //  var gameID = findGameIndex(14);
+  //  removeGameCard(1);
+    for (var i = 0; i < dropdowns.length; i++) {
+      var openDropdown = dropdowns[i];
+      if (openDropdown.classList.contains('show')) {
+        openDropdown.classList.remove('show');
+      }
+    }
+  document.getElementById(divName).classList.toggle("show");
+}
+
+// Close the dropdown menu if the user clicks outside of it
+
+window.onclick = function(event) {
+
+  if (event.target.className == "" && document.getElementById("createGameFormID").classList.contains('show') == false) {
+    var dropdowns = document.getElementsByClassName("dropdown-menu");
+    for (var i = 0; i < dropdowns.length; i++) {
+      var openDropdown = dropdowns[i];
+      if (openDropdown.classList.contains('show')) {
+        openDropdown.classList.remove('show');
+      }
+    }
+  }
+} 
+
+
+function buyTicketsForm(gameID){
+    
+    var gameArrayIndex = findGameIndex(gameID);
+    document.getElementById("btInputDIV").innerHTML = "<input type=\"number\" class=\"form-control\" id=\"btTicketAmount\" value =\"1\" min=1 max=8  oninput=\"btValidateCount(" + gameID + ")\">"
+    document.getElementById("btCurrentBalance").innerHTML = inGameBalance;
+    document.getElementById("btTotalCost").innerHTML = allGamesArray[gameArrayIndex]["ticketFee"];
+    document.getElementById("btNewBalance").innerHTML = "<SPAN style=\"font-weight:bold\">" +  (inGameBalance - allGamesArray[gameArrayIndex]["ticketFee"]).toFixed(10)*1  + "</SPAN>"
+    btValidateCount(gameID)
+    $("#DIV_BuyTickets").modal("show"); 
+    return;
+}
+
+function btValidateCount(gameID){
+    var gameArrayIndex = findGameIndex(gameID);
+    var ticketFee = allGamesArray[gameArrayIndex]["ticketFee"];
+    var ticketAmount = document.getElementById("btTicketAmount").value;
+    var totalCost = document.getElementById("btTotalCost").innerHTML = (ticketAmount * ticketFee);
+    var newBalance = inGameBalance - (ticketAmount * ticketFee);
+    document.getElementById("btConfirmData").innerHTML = "<button id=\"btConfirmButton\" onclick=buyTickets(" + gameID + "," + ticketAmount + "); type=\"button\" class=\"btn btn-primary\">Continue</button>"
+    if(newBalance >= 0){
+        document.getElementById("btNewBalance").innerHTML = "<SPAN style=\"font-weight:bold\">" + newBalance.toFixed(12)*1+ "</SPAN>"
+        document.getElementById("btConfirmButton").removeAttribute("disabled");
+    }
+    else{
+        document.getElementById("btNewBalance").innerHTML = "<SPAN style=\"color:red;font-weight:bold;\">" +  newBalance + "</SPAN>";
+        document.getElementById("btConfirmButton").setAttribute("disabled", true);
+    }
+}
+
+function finishGame(gameID){
+    var sendInfo = {from:accounts[0], gasPrice:'18000000000'};
+    contract.methods.endGame(gameID).estimateGas(sendInfo).then(function(gasLimit){
+        gasLimit = (gasLimit * 1.1).toFixed(0);
+        if(gasLimit > 70000000){
+            alert("This action is not available, is the game not over or did somebody already end the game?")
+            return
+        }
+        if(gasLimit < minGas)
+            gasLimit = minGas;
+        sendInfo = {from:accounts[0], gas:gasLimit, gasPrice:'18000000000'};      
+        contract.methods.endGame(gameID).send(sendInfo)
+    	    .on("transactionHash",function(trxHash){
+        			writeNotification("[End Game] transaction recorded: " + "<A style=\"color:white;\" href=https://hpbscan.org/tx/" + trxHash + " target = \"_blank\">" + trxHash + "</A><BR>" + "Awaiting network confirmation...<BR>");
+        })
+    })  
+}
+
+async function viewExchange(gameID, show){
+    
+    var buyTicketDisabled = ""
+    var sellTicketDisabled = ""
+    
+    var ticketsOwned;
+    var ticketsForSale;
+    var sendInfo = {from:accounts[0]};
+	await contract.methods.getPlayerGameInfo(gameID).call(sendInfo, await function(err,result){
+
+    	ticketsOwned = result["ticketsOwned"];
+        ticketsForSale = result["ticketsForSale"];
+        
+	});
+
+    await getBids(gameID);
+    gameIndex = findGameIndex(gameID)
+        
+    if(ticketsOwned == 0 || ticketsOwned == ticketsForSale || bidList.length >= maxBids){
+        sellTicketDisabled = "disabled";
+    }
+    var pricePlaceHolder = allGamesArray[gameIndex]["ticketFee"]; // ((parseFloat(allGamesArray[gameIndex]["hpbWinnerPool"]) / parseFloat(allGamesArray[gameIndex]["entryCount"]))*0.85).toFixed(10)*1;
+    
+var data=
+  "<div class=\"modal-dialog-lg modal-dialog-scrollable\" role=\"document\">" +
+    "<div class=\"modal-content\" style=\"height:600px;white-space:pre;background-color:#15A7C5;\">" +
+      "<div class=\"modal-header\">" +
+        "<h3 class=\"modal-title\" id=\"activeExchangeModal\" style=\"user-select: none;background-color:#15A7C5;color:black;font-weight:bold;\"> Exchange for game " + allGamesArray[gameIndex]["name"] + " [" + gameID + "]" + "</h3>" +
+        "<button type=\"button\" class=\"close\" data-dismiss=\"modal\" aria-label=\"Cancel\">" +
+          "<span aria-hidden=\"true\">&times;</span>" +
+        "</button>" +
+      "</div>" +
+     "<div style=\"background-color:#EEEEEE;\" class=\"modal-body\" id=\"DIV_exchangeDetails\" style=\"background: linear-gradient(0deg, rgba(210,214,214,1) 0%, rgba(229,233,232,1) 80%);color:black;\">" +
+     
+      "<button style=\"text-align:left;border:0 solid #EEEEEE;text-align:center;background-color:#EEEEEE;\" type=\"button\" data-toggle=\"collapse\" data-target=\"#div_exchangeInfo\" aria-expanded=\"false\" aria-controls=\"div_exchangeInfo\">" +
+      "<u>Exchange Help</u>" +
+      "</button>\r\n" +
+      "Tickets owned: " + ticketsOwned + "<BR>" +
+      "Tickets in exchange: " + ticketsForSale + "<BR>" +
+      "Original Ticket Price: " + allGamesArray[gameIndex]["ticketFee"] + " HPB<BR>" +
+      "<BR>" +
+
+    "<div class=\"collapse\" id=\"div_exchangeInfo\">" +
+      "<div class=\"card card-body\" style=\"overflow:scroll;background-color:black;color:white;\">" +
+         "*The exchange is similar to an aution house where each player can offer to sell their existing tickets.\r\n" +
+         "*Users cannot bid for a ticket until there is somebody selling their ticket first.\r\n" +
+         "*When a player bids for a ticket, it needs to be for an amount larger than the lowest current sale price of a ticket.\r\n" +
+         "*Bids that don't meet this requirement will not be accepted.\r\n" +
+         "*For this reason, it is recommended to place a bid significantly larger than the current bid otherwise your bid\r\n" +
+         "could be immediately overtaken by another bid similar to an auction. A bid that is higher than the lowest seller\r\n" +
+         "will automatically exchange for that ticket and become its new temporary owner until the end of the\r\n" +
+         "beginning of the next round.\r\n" +
+         "*When a bid is successfully placed, there is a 5 block action delay to give a chance for others to counter bid before the next\r\n" +
+         "round can start.\r\n" +
+         "*The last person to bid the highest amount before the next round starts, keeps the ticket.\r\n" +
+         "*The exchange is cleared at the beginning of each round.\r\n" +
+         "*There is ticket fee equal to the initial 2% fee of a ticket when the game started that is paid by the buyer.\r\n" +
+         "*Only " + maxBids +  " tickets can be exchanged each round.\r\n" +
+         "*The current tickets offered for sale are shown below.\r\n" +
+      "</div>" +
+    "</div>" +
+    "<div class=\"form-group\">" +
+    "<label style=\"float:left;\" for=\"hpbAmount\"><b>HPB Amount: </b></label>" +
+    "<input type=\"decimal\" class=\"form-control\" id=\"exHPBAmount\" value=\""  + pricePlaceHolder + "\" maxlength=18 style=\"width:300px;float:left;\">\n" +     
+     "</DIV>" +
+    "<button style=\"padding-right:50px;padding-left:50px;\" type=\"button\" onclick=\"sellTicket(" + gameID + ");\" class=\"btn btn-secondary\" id=\"sellTicketButton\"" +  sellTicketDisabled + ">Sell Ticket</button>"+
+    "<button style=\"padding-left:50px;padding-right:50px;\" type=\"button\" onclick=\"bidTicket(" + gameID + ");\" class=\"btn btn-secondary\"  id=\"bidTicketButton\"" +  buyTicketDisabled + ">Bid For Ticket</button>" +
+     "\r\n\r\n<H4 style=\"text-align:center\">" +  "<b><u>" + bidList.length + "</u>" + " ticket(s) for sale:</b></h4>" +
+    "<TABLE border = 1 style=\"margin:auto;\">" +
+    "<TR><TH>Current Owner</TH><TH>Bid Amount</TH></TR>"
+    for(var i = 0; i != bidList.length; i ++){
+      data += "<TR><TD>" + parseAddress(bidList[i]["ownedaddress"]) + "</TD><TD>" + web3.utils.fromWei(bidList[i]["highestBid"]) + "</TD></TR>"
+    }
+    
+     data+= 
+    "</TABLE>" +
+      "</div>" +
+      "<div class=\"modal-footer\" style=\"background: linear-gradient(0deg, rgba(210,214,214,1) 0%, rgba(229,233,232,1) 80%);\">" +
+        "<button type=\"button\"  class=\"btn btn-Modal titleprimary\" data-dismiss=\"modal\">Close</button>" +
+      "</div>" +
+    "</div>" 
+     
+     
+     
+document.getElementById("DIV_exchangeModal").innerHTML = data;  
+if(show == true)
+$("#activeExchangeModal").modal("show"); 
+
+
+}
+
+ 
+async function updateCurrentBlockNumber(){
+    while(true) {
+        await web3.eth.getBlockNumber().then(function(blockNumber){
+            currentBlockNumber = blockNumber
+       
+    	});
+    await sleep(6000);
+  }
+}
+
+function bidTicket(gameID){
+    var hpbAmount = web3.utils.toWei(document.getElementById("exHPBAmount").value);
+	contract.methods.placeBid(gameID, hpbAmount).estimateGas({from:accounts[0]}).then(function(gasLimit){
+        if(gasLimit > 70000000){
+            alert("Insufficient in-game balance, no current bids, or the new round may have just started.")
+            return;
+        }
+        gasLimit = (gasLimit * 1.1).toFixed(0);
+        if(gasLimit < minGas)
+            gasLimit = minGas;
+        var sendInfo = {from:accounts[0], gasPrice:'18000000000', gas:gasLimit};
+	    contract.methods.placeBid(gameID, hpbAmount).send(sendInfo)
+    	    .on("transactionHash",function(trxHash){
+        			writeNotification("[Buy Player Ticket] transaction recorded: " + "<A style=\"color:white;\" href=https://hpbscan.org/tx/" + trxHash + " target = \"_blank\">" + trxHash + "</A><BR>" + "Awaiting network confirmation...<BR>");
+        });
+	});
+}
+
+function sellTicket(gameID){
+    var hpbAmount = web3.utils.toWei(document.getElementById("exHPBAmount").value);
+	contract.methods.sellTicketBid(gameID, hpbAmount).estimateGas({from:accounts[0]}).then(function(gasLimit){
+        if(gasLimit > 70000000){
+            alert("This action is not available, all of your tickets are already in the exchange or you don't own any tickets.")
+            return;
+        }
+        gasLimit = (gasLimit * 1.1).toFixed(0);
+        if(gasLimit < minGas)
+            gasLimit = minGas;
+        var sendInfo = {from:accounts[0], gasPrice:'18000000000', gas:gasLimit};
+	    contract.methods.sellTicketBid(gameID, hpbAmount).send(sendInfo)
+    	    .on("transactionHash",function(trxHash){
+        			writeNotification("[Sell Ticket] transaction recorded: " + "<A style=\"color:white;\" href=https://hpbscan.org/tx/" + trxHash + " target = \"_blank\">" + trxHash + "</A><BR>" + "Awaiting network confirmation...<BR>");
+        }).on("error", function(error){
+            writeNotification("An error occurred with this transaction or it was canceled, please try again.")
+        });
+	});
+}
+
+
+async function waitForActionBlockThread(gameID) {
+
+    if(document.getElementById("gameSpinner" + gameID).style.visibility == "visible"){
+        return; //thread is already running for this game, terminate. 
+    }
+    //else continue
+
+    document.getElementById("gameSpinner" + gameID).style.visibility = 'visible';
+
+    try{
+        while(currentBlockNumber < allGamesArray[findGameIndex(gameID)]["blockCountActionReadyIndex"]) {
+        	document.getElementById("DIV_blocksRemaining"+gameID).innerHTML = (allGamesArray[findGameIndex(gameID)]["blockCountActionReadyIndex"] - currentBlockNumber);
+            await sleep(6000);
+        }
+    }
+    catch{
+        return; //must have left game or cancled 
+    }
+
+
+    if(allGamesArray[findGameIndex(gameID)]["currentRoundNumber"] == 0){
+
+        if(parseInt(allGamesArray[findGameIndex(gameID)]["entryCount"]) >= parseInt(allGamesArray[findGameIndex(gameID)]["minimumTicketCount"])){
+            changeActionMenuState(gameID, "StartGame", false);
+            document.getElementById("DIV_blocksRemaining"+gameID).innerHTML = "<SPAN style=\"color:gold;\">" + "Game is ready to start" + "</STYLE>";
+        }
+        else
+            document.getElementById("DIV_blocksRemaining"+gameID).innerHTML = "<SPAN style=\"color:gold;\">" + "Waiting for minimum tickets..." + "</STYLE>";
+        
+    }
+
+    else if(allGamesArray[findGameIndex(gameID)]["isEndGameReady"] == true) {
+        document.getElementById("DIV_blocksRemaining"+gameID).innerHTML = "<SPAN style=\"color:gold;\">" + "Game is over, use finish game to collect reward." + "</STYLE>";
+        changeActionMenuState(gameID, "FinishGame", false);
+    }
+    else{
+        document.getElementById("DIV_blocksRemaining"+gameID).innerHTML = "<SPAN style=\"color:gold;\">" + "Next round is ready to start" + "</STYLE>";
+        changeActionMenuState(gameID, "StartRound", false);
+    }
+
+    document.getElementById("gameSpinner" + gameID).style.visibility = 'hidden';
+}
+
+
+window.ethereum.on('accountsChanged', function (_accounts) {
+    // Time to reload your interface with accounts[0]!
+
+    if(accounts[0] != _accounts[0] && accounts != ""){
+        accounts = _accounts;
+        launchDapp( )
+    }
+  
+})
+
+
+</script>
+
+
+
+  <div class="container-fluid" style="border-radius: 16px;background-color:white;border:1px solid black;text-align:center;">
+    <p class="lead">Join the <A href = "https://t.me/hpbglobal" target="_blank">official HPB telegram</A> for real-time information and updates. &nbsp;<IMG src = "/images/telegram.jpg" width=25px;></p>
+    <p class="lead">Follow us on <A href = "https://twitter.com/CentralHpb" target="_blank"> Twitter </A>&nbsp;<IMG src = "/images/twitter.png" width=25px;></p>
+  </div>
+
+
+
+
+</BODY>
+</HTML>
